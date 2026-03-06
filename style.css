@@ -1,0 +1,405 @@
+/* TODO : revisar código */
+
+:root {
+    --spacing: 8px;
+    --border-radius: 5px;
+    --toolbar-height: 32px;
+    --font-family: "roboto", "arial", "sans-serif";
+    --editor-font-family: "Consolas", "Courier New", "Courier", "monospace";
+    --editor-font-size: 14px;
+    --hover-transition: background-color 0.25s;
+    --preview-min-width: 350px;
+    --dialog-wrapper-backdrop-filter: blur(7.5px);
+}
+
+:root[theme="light"] {
+    --background-color: rgba(255, 255, 255, 1);
+
+    --editor-background-color: rgba(255, 255, 255, 1);
+    --editor-line-foreground-color: rgba(135, 135, 135, 1);
+    --editor-text-foreground-color: rgba(15, 15, 15, 1);
+    --editor-button-foreground-color: rgba(45, 45, 45, 1);
+    --editor-button-hover-background-color: rgba(200, 200, 200, 1);
+    --editor-caret-foreground-color: rgba(0, 0, 0, 1);
+    --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
+
+    --dropdown-background-color: rgba(245, 245, 245, 1);
+    --dropdown-button-foreground-color: rgba(15, 15, 15, 1);
+    --dropdown-button-hover-background-color: rgba(200, 200, 200, 1);
+    --dropdown-line-foreground-color: rgba(165, 165, 165, 1);
+    --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
+
+    --preview-line-foreground-color: rgba(135, 135, 135, 1);
+    --preview-scrollbar-foreground-color: rgba(85, 85, 85, 1);
+
+    --active-tag-foreground-color: rgba(130, 0, 0, 1);
+    --active-tag-bracket-foreground-color: rgba(5, 50, 250, 1);
+    --active-metadata-dashes-foreground-color: rgba(5, 50, 250, 1);
+    --active-metadata-key-foreground-color: rgba(5, 80, 165, 1);
+    --active-metadata-value-foreground-color: rgba(165, 20, 20, 1);
+
+    --inactive-tag-foreground-color: rgba(130, 0, 0, 0.5);
+    --inactive-tag-bracket-foreground-color: rgba(5, 50, 250, 0.5);
+    --inactive-metadata-dashes-foreground-color: rgba(5, 50, 250, 0.5);
+    --inactive-metadata-key-foreground-color: rgba(5, 80, 165, 0.5);
+    --inactive-metadata-value-foreground-color: rgba(165, 20, 20, 0.5);
+
+    --selection-foreground-color: rgba(0, 0, 0, 1);
+    --selection-background-color: rgba(180, 180, 180, 1);
+
+    --dialog-background-color: rgba(245, 245, 245, 1);
+    --dialog-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.2);
+    --dialog-text-foreground-color: rgba(15, 15, 15, 1);
+    --dialog-wrapper-background-color: rgba(0, 0, 0, 0.25);
+}
+
+:root[theme="dark"] {
+    --background-color: rgba(30, 30, 30, 1);
+
+    --editor-background-color: rgba(35, 35, 35, 1);
+    --editor-line-foreground-color: rgba(85, 85, 85, 1);
+    --editor-text-foreground-color: rgba(180, 180, 180, 1);
+    --editor-button-foreground-color: rgba(180, 180, 180, 1);
+    --editor-button-hover-background-color: rgba(85, 85, 85, 1);
+    --editor-caret-foreground-color: rgba(220, 220, 220, 1);
+    --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
+
+    --dropdown-background-color: rgba(50, 50, 50, 1);
+    --dropdown-button-foreground-color: rgba(180, 180, 180, 1);
+    --dropdown-button-hover-background-color: rgba(85, 85, 85, 1);
+    --dropdown-line-foreground-color: rgba(85, 85, 85, 1);
+    --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.25);
+
+    --preview-line-foreground-color: rgba(85, 85, 85, 1);
+
+    --active-tag-foreground-color: rgba(215, 185, 125, 1);
+    --active-tag-bracket-foreground-color: rgba(250, 210, 5, 1);
+    --active-metadata-dashes-foreground-color: rgba(250, 210, 5, 1);
+    --active-metadata-key-foreground-color: rgba(155, 220, 255, 1);
+    --active-metadata-value-foreground-color: rgba(205, 145, 120, 1);
+
+    --inactive-tag-foreground-color: rgba(215, 185, 125, 0.5);
+    --inactive-tag-bracket-foreground-color: rgba(250, 210, 5, 0.5);
+    --inactive-metadata-dashes-foreground-color: rgba(250, 210, 5, 0.5);
+    --inactive-metadata-key-foreground-color: rgba(155, 220, 255, 0.5);
+    --inactive-metadata-value-foreground-color: rgba(205, 145, 120, 0.5);
+
+    --selection-background-color: rgba(180, 180, 180, 1);
+    --selection-foreground-color: rgba(10, 10, 10, 1);
+
+    --dialog-background-color: rgba(50, 50, 50, 1);
+    --dialog-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.25);
+    --dialog-text-foreground-color: rgba(180, 180, 180, 1);
+    --dialog-wrapper-background-color: rgba(0, 0, 0, 0.25);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0 var(--spacing);
+    background: var(--background-color);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing);
+}
+
+body:has(.preview[hidden]) {
+    justify-content: center;
+}
+
+body:has(.preview[hidden]) .main-wrapper {
+    max-width: calc(100vw - (2 * var(--spacing)));
+}
+
+::selection {
+    color: var(--selection-foreground-color);
+    background: var(--selection-background-color);
+}
+
+.main-wrapper {
+    width: 600px;
+    min-width: 295px;
+    max-width: calc(100vw - (2 * var(--spacing)) - var(--spacing) - var(--preview-min-width));
+    height: calc(100vh - (2 * var(--spacing)));
+    background: var(--editor-background-color);
+    border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
+    padding: var(--spacing);
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    resize: horizontal;
+    overflow: hidden;
+    border: 1px solid var(--editor-line-foreground-color);
+}
+
+.toolbar {
+    display: flex;
+    gap: calc(var(--spacing) / 2);
+    height: var(--toolbar-height);
+    padding-bottom: var(--spacing);
+    margin-bottom: var(--spacing);
+    border-bottom: 1px solid var(--editor-line-foreground-color);
+    min-width: 0;
+}
+
+.file-paths {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.text-file-path,
+.template-file-path,
+.file-path-title {
+    color: var(--editor-text-foreground-color);
+    font-weight: normal;
+    font-size: 11px;
+    letter-spacing: 0.25px;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+    text-overflow: ellipsis;
+    font-style: italic;
+}
+
+.file-path-title {
+    font-style: normal;
+    font-weight: bold;
+    margin-right: calc(var(--spacing) / 2);
+}
+
+.file-path-wrapper {
+    display: inline-flex;
+}
+
+.toolbar__divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--editor-line-foreground-color);
+}
+
+.dropdown__divider {
+    height: 1px;
+    align-self: stretch;
+    background: var(--dropdown-line-foreground-color);
+}
+
+.button {
+    width: calc(var(--toolbar-height) * 0.75);
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--border-radius);
+    background: transparent;
+    color: var(--editor-button-foreground-color);
+    cursor: pointer;
+    padding: 0;
+    transition: var(--hover-transition);
+    user-select: none;
+    outline: none;
+}
+
+.button:hover {
+    background: var(--editor-button-hover-background-color);
+}
+
+.button svg path {
+    fill: currentColor;
+}
+
+.menu {
+    display: flex;
+    gap: calc(var(--spacing) / 2);
+    min-width: 0;
+    position: relative;
+    height: 100%;
+}
+
+.menu-dropdown[hidden] {
+    display: none;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: calc(100% + var(--spacing));
+    right: 0;
+    min-width: 175px;
+    padding: var(--spacing);
+    background: var(--dropdown-background-color);
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) / 2);
+    box-shadow: var(--dropdown-shadow);
+    z-index: 1000;
+}
+
+.menu-item {
+    background: transparent;
+    border: 0;
+    color: var(--dropdown-button-foreground-color);
+    padding: var(--spacing);
+    border-radius: var(--border-radius);
+    text-align: left;
+    cursor: pointer;
+    user-select: none;
+}
+
+.menu-item:hover {
+    background: var(--dropdown-button-hover-background-color);
+}
+
+.editor-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.editor-input,
+.editor-highlight {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: var(--spacing);
+    overflow: auto;
+    scrollbar-gutter: stable;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.4;
+    font-family: var(--editor-font-family);
+    font-size: var(--editor-font-size);
+    padding: 0;
+}
+
+.editor-input {
+    background: transparent;
+    color: transparent;
+    caret-color: var(--editor-caret-foreground-color);
+    border: 0;
+    resize: none;
+    outline: none;
+    scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
+    scrollbar-width: thin;
+}
+
+.editor-highlight {
+    pointer-events: none;
+    color: var(--editor-text-foreground-color);
+    user-select: none;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+}
+
+.inactive-tag {
+    color: var(--inactive-tag-foreground-color);
+}
+
+.active-tag {
+    color: var(--active-tag-foreground-color);
+}
+
+.inactive-tag-bracket {
+    color: var(--inactive-tag-bracket-foreground-color);
+}
+
+.active-tag-bracket {
+    color: var(--active-tag-bracket-foreground-color);
+}
+
+.active-metadata-dashes {
+    color: var(--active-metadata-dashes-foreground-color);
+}
+
+.inactive-metadata-dashes {
+    color: var(--inactive-metadata-dashes-foreground-color);
+}
+
+.active-metadata-key {
+    color: var(--active-metadata-key-foreground-color);
+}
+
+.inactive-metadata-key {
+    color: var(--inactive-metadata-key-foreground-color);
+}
+
+.active-metadata-value {
+    color: var(--active-metadata-value-foreground-color);
+}
+
+.inactive-metadata-value {
+    color: var(--inactive-metadata-value-foreground-color);
+}
+
+.preview {
+    background: rgb(255, 255, 255);
+    height: calc(100vh - (2 * var(--spacing)));
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-width: var(--preview-min-width);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--preview-line-foreground-color);
+    padding: var(--spacing);
+}
+
+.help-dialog-wrapper {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background: var(--dialog-wrapper-background-color);
+    z-index: 999;
+    backdrop-filter: var(--dialog-wrapper-backdrop-filter);
+    user-select: none;
+}
+
+.help-dialog {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+    height: 300px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--dialog-background-color);
+    padding: var(--spacing);
+    box-shadow: var(--dialog-shadow);
+    border-radius: var(--border-radius);
+    z-index: 1000;
+}
+
+.help-dialog button {
+    align-self: flex-end;
+}
+
+.help-dialog-content {
+    text-align: center;
+}
+
+.help-dialog-content h1 {
+    color: var(--dialog-text-foreground-color);
+    margin: 0;
+    margin-bottom: calc(var(--spacing) * 2);
+}
+
+.help-dialog-content p {
+    color: var(--dialog-text-foreground-color);
+    margin: 0;
+}
+
+.help-dialog[hidden] {
+    display: none;
+}
