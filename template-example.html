@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="$lang$">
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        @font-face {
+            font-family: "Garamond";
+            src: url("file:///C:/Windows/Fonts/GARA.TTF") format("truetype");
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: "Garamond";
+            src: url("file:///C:/Windows/Fonts/GARABD.TTF") format("truetype");
+            font-weight: bold;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: "Garamond";
+            src: url("file:///C:/Windows/Fonts/GARAIT.TTF") format("truetype");
+            font-weight: normal;
+            font-style: italic;
+        }
+
+        @page {
+            size: 14cm 21cm;
+            margin: 2.5cm 1.5cm 2.5cm 1.5cm;
+
+            @bottom-center {
+                content: "—\2002" counter(page) "\2002—";
+                font-family: "Garamond", serif;
+                font-size: 11pt;
+            }
+        }
+
+        body {
+            margin: 0;
+            font-family: "Garamond", serif;
+        }
+
+        .doc-title {
+            font-size: 18pt;
+            text-align: center;
+            font-variant-caps: small-caps;
+            text-transform: capitalize;
+            margin-bottom: 36pt;
+        }
+
+        .doc-author-date {
+            font-size: 11pt;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 8pt;
+        }
+
+        .doc-body p {
+            font-size: 11pt;
+            text-align: justify;
+            text-indent: 0.7cm;
+            hyphens: auto;
+            margin: 0;
+            margin-block: 0;
+        }
+
+        div.stanza {
+            margin-bottom: 16pt;
+        }
+
+        div.stanza p {
+            text-indent: -1.2cm;
+            padding-left: 1.2cm;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="doc-author-date">$author$ – <span id="doc-date">$date$</span></div>
+    <div class="doc-title">$title$</div>
+    <div class="doc-body">$body$</div>
+
+    <script>
+        const docDate = document.getElementById("doc-date");
+        const content = docDate.textContent.trim();
+
+        if (/^\d{4}-\d{2}(-\d{2})?$/.test(content)) {
+            const [y, m, d = 1] = content.split("-").map(Number);
+
+            const date = new Date(y, m - 1, d);
+
+            const options = d === 1 && content.length === 7
+                ? { month: "long", year: "numeric" }
+                : { day: "2-digit", month: "long", year: "numeric" };
+
+            docDate.textContent = date.toLocaleDateString("$lang$", options);
+        }
+    </script>
+</body>
+
+</html>
