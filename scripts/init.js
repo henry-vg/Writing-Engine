@@ -28,4 +28,4 @@ let currentTemplateContent = null;
 editorInput.focus();
 editorInput.spellcheck = false;
 preview.toggleAttribute("hidden", false);
-highlightEditor();
+parseEditor();

@@ -208,7 +208,7 @@ function loadTemplateFile(name, content) {
 function loadTextFile(name, content) {
     textFilePath.textContent = name;
     editorInput.value = content;
-    highlightEditor();
+    parseEditor();
     updatePreviewFromTemplate();
 }
 
@@ -222,183 +222,158 @@ function closeAllMenuDropdowns() {
     }
 }
 
-function highlightEditor() {
-    // TODO : revisar código
-    const value = editorInput.value;
+function parseEditor() {
+    let value = editorInput.value;
+    let highlighted = "";
 
     const caretPosition = editorInput.selectionDirection === "backward"
         ? editorInput.selectionStart
         : editorInput.selectionEnd;
 
-    const stack = [];
-    const tokensByIndex = new Map();
+    const metadata = getMetadata(value);
 
-    currentTextMetadata = null;
-    currentTextBody = value.trim();
+    if (metadata.raw) {
+        value = value.slice(metadata.raw.length);
+        highlighted += highlightMetadata(metadata, caretPosition);
+    }
 
-    const addSpanToken = (start, endExclusive, className) => {
-        if (start == null || endExclusive == null) return;
-        if (start < 0 || endExclusive <= start) return;
-        tokensByIndex.set(start, {
-            end: endExclusive - 1,
-            html: `<span class="${className}">${escapeHtml(value.slice(start, endExclusive))}</span>`,
-        });
-    };
+    highlighted += highlightTags(value, caretPosition, metadata.raw.length);
+    editorHighlight.innerHTML = highlighted;
+}
 
-    for (let i = 0; i < value.length; i++) {
-        const currentChar = value[i];
+function getMetadata(value) {
+    if (!value.startsWith("---\n")) {
+        return { parsed: {}, raw: "" };
+    }
 
-        if (i === 0) {
-            if (currentChar === "-" && value[1] === "-" && value[2] === "-" && (value[3] === "\n" || (value[3] === "\r" && value[4] === "\n"))) {
-                const openingNewlineLen = value[3] === "\n" ? 1 : 2;
-                const openingEndExclusive = 3 + openingNewlineLen;
+    const endMatch = value.slice(4).match(/(?:^|\n)---(?=\n|$)/);
+    if (!endMatch) {
+        return { parsed: {}, raw: "" };
+    }
 
-                const nextLineEnd = (from) => {
-                    const end = value.indexOf("\n", from);
-                    return end === -1 ? value.length : end;
-                };
+    const endIndex = 4 + endMatch.index + (endMatch[0].startsWith("\n") ? 1 : 0);
+    const raw = value.slice(0, endIndex + 3);
 
-                let cursor = openingEndExclusive;
-                let closingDashesStart = -1;
-                let metadataEndExclusive = 0;
-                let isValid = true;
-                const meta = {};
+    const inner = value.slice(4, endIndex);
+    const lines = inner.split("\n");
+    const parsed = {};
 
-                while (cursor <= value.length) {
-                    const lineStart = cursor;
-                    const lineEnd = nextLineEnd(lineStart);
-                    const lineEndExclusive = lineEnd < value.length ? lineEnd + 1 : lineEnd;
+    for (const line of lines) {
+        if (!line.trim()) continue;
 
-                    let logicalLineEnd = lineEnd;
-                    if (logicalLineEnd > lineStart && value[logicalLineEnd - 1] === "\r") logicalLineEnd--;
+        const match = line.match(/^([^:\n]+):(.*)$/);
+        if (!match) {
+            return { parsed: {}, raw: "" };
+        }
 
-                    const line = value.slice(lineStart, logicalLineEnd);
+        parsed[match[1].trim()] = match[2].trim();
+    }
 
-                    if (line === "---") {
-                        closingDashesStart = lineStart;
-                        metadataEndExclusive = lineEndExclusive;
-                        break;
-                    }
+    return { parsed, raw };
+}
 
-                    // Allow blank lines inside metadata: ignore them (don't parse into currentTextMetadata).
-                    if (line.trim() === "") {
-                        cursor = lineEndExclusive;
-                        continue;
-                    }
+function highlightMetadata(metadata, caretPosition) {
+    const raw = metadata.raw;
+    const classPrefix = caretPosition > 0 && caretPosition < raw.length ? "active" : "inactive";
 
-                    const colonIndex = line.indexOf(":");
-                    if (colonIndex === -1) {
-                        isValid = false;
-                        break;
-                    }
+    const dashClass = `${classPrefix}-metadata-dashes`;
+    const keyClass = `${classPrefix}-metadata-key`;
+    const valueClass = `${classPrefix}-metadata-value`;
 
-                    const key = line.slice(0, colonIndex).trim();
-                    if (!key) {
-                        isValid = false;
-                        break;
-                    }
+    const lines = raw.split("\n");
+    let html = "";
 
-                    meta[key] = line.slice(colonIndex + 1).trim();
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
 
-                    cursor = lineEndExclusive;
-                }
+        if (line === "---") {
+            html += `<span class="${dashClass}">---</span>`;
+        } else if (!line.trim()) {
+            html += "";
+        } else {
+            const match = line.match(/^([^:\n]+):(.*)$/);
 
-                if (isValid && metadataEndExclusive) {
-                    currentTextMetadata = meta;
-                    currentTextBody = value.slice(metadataEndExclusive).trim();
-                    const isMetadataActive = caretPosition >= 0 && caretPosition < metadataEndExclusive;
+            if (match) {
+                const key = match[1];
+                const value = match[2];
 
-                    // dashes (abertura e fechamento)
-                    addSpanToken(0, 3, isMetadataActive ? "active-metadata-dashes" : "inactive-metadata-dashes");
-                    if (closingDashesStart !== -1) {
-                        addSpanToken(closingDashesStart, closingDashesStart + 3, isMetadataActive ? "active-metadata-dashes" : "inactive-metadata-dashes");
-                    }
-
-                    // linhas key: value
-                    cursor = openingEndExclusive;
-                    while (cursor < metadataEndExclusive) {
-                        const lineStart = cursor;
-                        const lineEnd = nextLineEnd(lineStart);
-                        const lineEndExclusive = lineEnd < value.length ? lineEnd + 1 : lineEnd;
-
-                        let logicalLineEnd = lineEnd;
-                        if (logicalLineEnd > lineStart && value[logicalLineEnd - 1] === "\r") logicalLineEnd--;
-
-                        const line = value.slice(lineStart, logicalLineEnd);
-                        if (line === "---") break;
-
-                        const colonIndex = line.indexOf(":");
-                        if (colonIndex !== -1) {
-                            const keyStart = lineStart;
-                            const keyEndExclusive = lineStart + colonIndex + 1; // inclui ':'
-                            const valueStart = keyEndExclusive;
-                            const valueEndExclusive = logicalLineEnd;
-
-                            addSpanToken(keyStart, keyEndExclusive, isMetadataActive ? "active-metadata-key" : "inactive-metadata-key");
-                            addSpanToken(valueStart, valueEndExclusive, isMetadataActive ? "active-metadata-value" : "inactive-metadata-value");
-                        }
-
-                        cursor = lineEndExclusive;
-                    }
-
-                    // pula o metadata inteiro pra não aplicar highlight de tags dentro dele
-                    i = metadataEndExclusive - 1;
-                    continue;
-                }
+                html += `<span class="${keyClass}">${escapeHtml(key)}</span>`;
+                html += `:`;
+                html += `<span class="${valueClass}">${escapeHtml(value)}</span>`;
+            } else {
+                html += escapeHtml(line);
             }
         }
 
-        if (currentChar === "{") {
-            let j = i + 1;
-            while (j < value.length && value[j] !== " " && value[j] !== "}" && value[j] !== "\n" && value[j] !== "\r") j++;
-
-            if (value[j] !== " " && value[j] !== "\n" && value[j] !== "\r") continue;
-
-            const tag = value.slice(i + 1, j);
-            if (!tag || !validTags.has(tag)) continue;
-
-            stack.push({ open: i, tagEnd: j - 1 });
-
-            i = j - 1;
-            continue;
-        }
-
-        if (currentChar === "}") {
-            if (!stack.length) continue;
-
-            const { open, tagEnd } = stack.pop();
-            const isActive = caretPosition > open && caretPosition <= i;
-            const tagStart = open + 1;
-            const tag = value.slice(tagStart, tagEnd + 1);
-
-            tokensByIndex.set(open, {
-                end: open,
-                html: `<span class="${isActive ? "active-tag-bracket" : "inactive-tag-bracket"}">{</span>`,
-            });
-
-            tokensByIndex.set(i, {
-                end: i,
-                html: `<span class="${isActive ? "active-tag-bracket" : "inactive-tag-bracket"}">}</span>`,
-            });
-
-            tokensByIndex.set(tagStart, {
-                end: tagEnd,
-                html: `<span class="${isActive ? "active-tag" : "inactive-tag"}">${escapeHtml(tag)}</span>`,
-            });
+        if (i < lines.length - 1) {
+            html += "\n";
         }
     }
 
-    let highlighted = "";
+    return html;
+}
+
+function highlightTags(value, caretPosition, offset = 0) {
+    const pairs = new Map();
+    const stack = [];
+
     for (let i = 0; i < value.length; i++) {
-        const token = tokensByIndex.get(i);
-        if (token) {
-            highlighted += token.html;
-            i = token.end;
-            continue;
+        if (value[i] === "{") {
+            stack.push(i);
+        } else if (value[i] === "}") {
+            const start = stack.pop();
+            if (start != null) {
+                pairs.set(start, i);
+            }
         }
-
-        highlighted += escapeHtml(value[i]);
     }
 
-    editorHighlight.innerHTML = highlighted;
+    function render(from, to) {
+        let html = "";
+        let i = from;
+
+        while (i < to) {
+            if (value[i] === "{" && pairs.has(i)) {
+                const end = pairs.get(i);
+                const inner = value.slice(i + 1, end);
+                const match = inner.match(/^([a-zA-Z]+\s)/);
+
+                if (match) {
+                    const tag = match[1];
+                    const tagExists = Object.keys(tags).find(key =>
+                        tags[key].values.includes(tag.trim())
+                    );
+
+                    if (tagExists) {
+                        const contentStart = i + 1 + match[0].length;
+                        const absoluteStart = offset + i;
+                        const absoluteEnd = offset + end;
+
+                        const classPrefix =
+                            caretPosition > absoluteStart && caretPosition < absoluteEnd + 1
+                                ? "active"
+                                : "inactive";
+
+                        const bracketClass = `${classPrefix}-tag-bracket`;
+                        const tagClass = `${classPrefix}-tag`;
+
+                        html += `<span class="${bracketClass}">{</span>`;
+                        html += `<span class="${tagClass}">${escapeHtml(tag)}</span>`;
+                        html += render(contentStart, end);
+                        html += `<span class="${bracketClass}">}</span>`;
+
+                        i = end + 1;
+                        continue;
+                    }
+                }
+            }
+
+            html += escapeHtml(value[i]);
+            i++;
+        }
+
+        return html;
+    }
+
+    return render(0, value.length);
 }

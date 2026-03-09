@@ -46,11 +46,11 @@ function handleDocumentKeyDown(e) {
 }
 
 function handleDocumentSelectionChange() {
-    if (document.activeElement === editorInput) highlightEditor();
+    if (document.activeElement === editorInput) parseEditor();
 }
 
 function handleEditorInputInput() {
-    highlightEditor();
+    parseEditor();
     updatePreviewFromTemplate();
 }
 
@@ -257,13 +257,13 @@ function handleEditMetadataButtonClick() {
 
         editorInput.scrollTop = 0;
         editorHighlight.scrollTop = 0;
-        highlightEditor();
+        parseEditor();
         return;
     }
     editorInput.setSelectionRange(3 + newline.length, 3 + newline.length);
     editorInput.scrollTop = 0;
     editorHighlight.scrollTop = 0;
-    highlightEditor();
+    parseEditor();
 }
 
 function handleMenuDropdownButtonClick(e, dropdown) {
