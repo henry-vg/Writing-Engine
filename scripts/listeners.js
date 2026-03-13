@@ -16,6 +16,7 @@ for (const { button, tag } of formattingElements) {
 toggleThemeButton.addEventListener("click", () => handleToggleThemeButtonClick())
 toggleSpellcheckButton.addEventListener("click", () => handleToggleSpellcheckButtonClick())
 togglePreviewButton.addEventListener("click", () => handleTogglePreviewButtonClick())
+togglePreviewNegativeButton.addEventListener("click", () => handleTogglePreviewNegativeButtonClick())
 
 editMetadataButton.addEventListener("click", () => handleEditMetadataButtonClick())
 

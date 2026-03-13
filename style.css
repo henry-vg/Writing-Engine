@@ -353,6 +353,10 @@ body:has(.preview[hidden]) .main-wrapper {
     padding: var(--spacing);
 }
 
+.preview[negative] {
+    filter: invert(1) hue-rotate(180deg);
+}
+
 .help-dialog-wrapper {
     position: fixed;
     width: 100%;

@@ -13,6 +13,7 @@ const helpDialogWrapper = document.getElementById("help-dialog-wrapper");
 const toggleThemeButton = document.getElementById("toggle-theme-button");
 const toggleSpellcheckButton = document.getElementById("toggle-spellcheck-button");
 const togglePreviewButton = document.getElementById("toggle-preview-button");
+const togglePreviewNegativeButton = document.getElementById("toggle-preview-negative-button");
 
 const titlesButton = document.getElementById("titles-button");
 const title1Button = document.getElementById("title1-button");

@@ -241,6 +241,12 @@ function handleTogglePreviewButtonClick() {
     preview.toggleAttribute("hidden", !preview.hidden);
 }
 
+function handleTogglePreviewNegativeButtonClick() {
+    const negative = preview.getAttribute("negative") === null;
+    loadPreviewNegative(negative);
+    dbSet(DBPreviewNegativeKey, negative);
+}
+
 function handleEditMetadataButtonClick() {
     editorInput.focus();
 

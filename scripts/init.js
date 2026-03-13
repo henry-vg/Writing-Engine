@@ -25,7 +25,17 @@ let currentTemplateContent = null;
     }
 })();
 
+(async () => {
+    const cachedPreviewNegative = await dbGet(DBPreviewNegativeKey);
+    if (cachedPreviewNegative) {
+        loadPreviewNegative(cachedPreviewNegative);
+    } else {
+        loadPreviewNegative(defaultPreviewNegative);
+    }
+})();
+
 editorInput.focus();
 editorInput.spellcheck = false;
 preview.toggleAttribute("hidden", false);
+
 parseEditor();

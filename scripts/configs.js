@@ -3,7 +3,9 @@ const DBStore = "kv";
 const DBTemplateKey = "template";
 const DBTextKey = "text";
 const DBThemeKey = "theme";
+const DBPreviewNegativeKey = "preview-negative";
 const defaultTheme = "dark";
+const defaultPreviewNegative = false;
 const previewScrollbarClass = "__preview-iframe-scrollbar";
 
 const tags = {

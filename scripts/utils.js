@@ -216,6 +216,10 @@ function loadTheme(theme) {
     document.documentElement.setAttribute("theme", theme);
 }
 
+function loadPreviewNegative(negative) {
+    preview.toggleAttribute("negative", negative);
+}
+
 function closeAllMenuDropdowns() {
     for (const { dropdown } of menuElements) {
         dropdown.toggleAttribute("hidden", true);
