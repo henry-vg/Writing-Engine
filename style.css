@@ -37,12 +37,14 @@
     --active-metadata-dashes-foreground-color: rgba(5, 50, 250, 1);
     --active-metadata-key-foreground-color: rgba(5, 80, 165, 1);
     --active-metadata-value-foreground-color: rgba(165, 20, 20, 1);
+    --active-metadata-colon-foreground-color: rgba(15, 15, 15, 1);
 
     --inactive-tag-foreground-color: rgba(130, 0, 0, 0.5);
     --inactive-tag-bracket-foreground-color: rgba(5, 50, 250, 0.5);
     --inactive-metadata-dashes-foreground-color: rgba(5, 50, 250, 0.5);
     --inactive-metadata-key-foreground-color: rgba(5, 80, 165, 0.5);
     --inactive-metadata-value-foreground-color: rgba(165, 20, 20, 0.5);
+    --inactive-metadata-colon-foreground-color: rgba(15, 15, 15, 0.5);
 
     --selection-foreground-color: rgba(0, 0, 0, 1);
     --selection-background-color: rgba(180, 180, 180, 1);
@@ -77,12 +79,14 @@
     --active-metadata-dashes-foreground-color: rgba(250, 210, 5, 1);
     --active-metadata-key-foreground-color: rgba(155, 220, 255, 1);
     --active-metadata-value-foreground-color: rgba(205, 145, 120, 1);
+    --active-metadata-colon-foreground-color: rgba(180, 180, 180, 1);
 
     --inactive-tag-foreground-color: rgba(215, 185, 125, 0.5);
     --inactive-tag-bracket-foreground-color: rgba(250, 210, 5, 0.5);
     --inactive-metadata-dashes-foreground-color: rgba(250, 210, 5, 0.5);
     --inactive-metadata-key-foreground-color: rgba(155, 220, 255, 0.5);
     --inactive-metadata-value-foreground-color: rgba(205, 145, 120, 0.5);
+    --inactive-metadata-colon-foreground-color: rgba(180, 180, 180, 0.5);
 
     --selection-background-color: rgba(180, 180, 180, 1);
     --selection-foreground-color: rgba(10, 10, 10, 1);
@@ -340,6 +344,14 @@ body:has(.preview[hidden]) .main-wrapper {
 
 .inactive-metadata-value {
     color: var(--inactive-metadata-value-foreground-color);
+}
+
+.active-metadata-colon {
+    color: var(--active-metadata-colon-foreground-color);
+}
+
+.inactive-metadata-colon {
+    color: var(--inactive-metadata-colon-foreground-color);
 }
 
 .preview {

@@ -283,6 +283,7 @@ function highlightMetadata(metadata, caretPosition) {
     const dashClass = `${classPrefix}-metadata-dashes`;
     const keyClass = `${classPrefix}-metadata-key`;
     const valueClass = `${classPrefix}-metadata-value`;
+    const colonClass = `${classPrefix}-metadata-colon`;
 
     const lines = raw.split("\n");
     let html = "";
@@ -302,7 +303,7 @@ function highlightMetadata(metadata, caretPosition) {
                 const value = match[2];
 
                 html += `<span class="${keyClass}">${escapeHtml(key)}</span>`;
-                html += `:`;
+                html += `<span class="${colonClass}">:</span>`;
                 html += `<span class="${valueClass}">${escapeHtml(value)}</span>`;
             } else {
                 html += escapeHtml(line);
