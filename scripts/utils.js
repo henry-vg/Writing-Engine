@@ -7,6 +7,10 @@ function escapeHtml(text) {
         .replace(/'/g, "&#39;");
 }
 
+function normalizeLineBreaks(text) {
+    return text.replaceAll("\r\n", "\n");
+}
+
 async function openFile(accept) {
     return await new Promise((resolve) => {
         const input = document.createElement("input");
@@ -17,185 +21,36 @@ async function openFile(accept) {
     });
 }
 
-function updatePreviewFromTemplate() {
-    if (!currentTemplateContent) return;
-
-    let merged = currentTemplateContent;
-
-    for (const [key, value] of Object.entries(currentTextMetadata ?? {})) {
-        const placeholder = `$${key}$`;
-        merged = merged.replaceAll(placeholder, value);
-    }
-
-
-    function renderBodyToHtml(bodyText) {
-        // TODO : revisar código 
-        if (!bodyText) return "";
-
-        const text = String(bodyText);
-        const out = [];
-        const stack = [];
-
-        const isParagraphWrappingEnabled = () => stack.every((x) => x.contentParagraphWrapping);
-
-        const isBlockReplacement = (replacement) => {
-            const tagName = replacement?.value;
-            return tagName === "div" || tagName === "h1" || tagName === "h2" || tagName === "h3";
-        };
-
-        let paragraphOpen = false;
-
-        const openParagraph = () => {
-            if (!isParagraphWrappingEnabled()) return;
-            if (paragraphOpen) return;
-            out.push("<p>");
-            paragraphOpen = true;
-        };
-
-        const closeParagraph = () => {
-            if (!isParagraphWrappingEnabled()) return;
-            if (!paragraphOpen) return;
-            out.push("</p>");
-            paragraphOpen = false;
-        };
-
-        const emitInlineHtml = (html) => {
-            if (isParagraphWrappingEnabled()) {
-                openParagraph();
-                out.push(html);
-                return;
-            }
-
-            out.push(html);
-        };
-
-        const emitText = (raw) => {
-            if (!raw) return;
-
-            if (!isParagraphWrappingEnabled()) {
-                // Don't emit whitespace-only runs when paragraph wrapping is disabled.
-                if (!/\S/.test(raw)) return;
-                out.push(escapeHtml(raw));
-                return;
-            }
-
-            // Don't create paragraphs for whitespace-only lines.
-            if (!paragraphOpen && !/\S/.test(raw)) return;
-            openParagraph();
-            out.push(escapeHtml(raw));
-        };
-
-        const openTag = (tagValue) => {
-            if (!validTags.has(tagValue)) return false;
-
-            const key = tagKeyByValue[tagValue] ?? tagValue;
-            const replacement = tags[key]?.replacement;
-            if (!replacement?.value) return false;
-
-            const classes = Array.isArray(replacement.classes) ? replacement.classes : [];
-            const classAttr = classes.length ? ` class=\"${escapeHtml(classes.join(" "))}\"` : "";
-            const html = `<${replacement.value}${classAttr}>`;
-
-            const isBlock = isBlockReplacement(replacement);
-            if (isBlock) closeParagraph();
-            (isBlock ? out.push(html) : emitInlineHtml(html));
-
-            stack.push({
-                name: replacement.value,
-                isBlock,
-                contentParagraphWrapping: replacement.contentParagraphWrapping,
-            });
-            return true;
-        };
-
-        const closeTag = () => {
-            if (!stack.length) {
-                emitText("}");
-                return;
-            }
-
-            const { name, isBlock } = stack.pop();
-            if (isBlock) closeParagraph();
-            (isBlock ? out.push(`</${name}>`) : emitInlineHtml(`</${name}>`));
-        };
-
-        let i = 0;
-        while (i < text.length) {
-            const ch = text[i];
-
-            if (ch === "\n" || ch === "\r") {
-                if (ch === "\r" && text[i + 1] === "\n") i++;
-                i++;
-                closeParagraph();
-                continue;
-            }
-
-            if (ch === "{") {
-                let j = i + 1;
-                while (j < text.length && text[j] !== " " && text[j] !== "}" && text[j] !== "\n" && text[j] !== "\r") j++;
-
-                const delim = text[j];
-                if (delim === " " || delim === "\n" || delim === "\r") {
-                    const tagValue = text.slice(i + 1, j);
-                    if (openTag(tagValue)) {
-                        // If delimiter is a space, consume it. If it's a newline, keep it so it becomes a paragraph break.
-                        i = delim === " " ? (j + 1) : j;
-                        continue;
-                    }
-                }
-
-                emitText("{");
-                i++;
-                continue;
-            }
-
-            if (ch === "}") {
-                closeTag();
-                i++;
-                continue;
-            }
-
-            // Regular text chunk (escape)
-            let start = i;
-            while (i < text.length && text[i] !== "{" && text[i] !== "}" && text[i] !== "\n" && text[i] !== "\r") i++;
-            emitText(text.slice(start, i));
-        }
-
-        closeParagraph();
-
-        // Close any still-open tags to keep the HTML valid.
-        while (stack.length) {
-            const { name, isBlock } = stack.pop();
-            if (isBlock) {
-                closeParagraph();
-                out.push(`</${name}>`);
-                continue;
-            }
-
-            emitInlineHtml(`</${name}>`);
-        }
-
-        closeParagraph();
-        return out.join("");
-    }
-
-
-    merged = merged.replaceAll("$body$", renderBodyToHtml(currentTextBody));
-
-    preview.srcdoc = merged;
-}
-
 function loadTemplateFile(name, content) {
     templateFilePath.textContent = name;
 
+    if (!content) {
+        templateContent = null;
+        togglePreviewButton.disabled = true;
+        togglePreviewNegativeButton.disabled = true;
+        preview.toggleAttribute("hidden", true);
+        closeTemplateButton.toggleAttribute("disabled", true);
+        togglePreviewButton.toggleAttribute("disabled", true);
+        togglePreviewNegativeButton.toggleAttribute("disabled", true);
+        return
+    } else {
+        content = normalizeLineBreaks(content);
+        togglePreviewButton.disabled = false;
+        togglePreviewNegativeButton.disabled = false;
+        preview.toggleAttribute("hidden", false);
+        closeTemplateButton.toggleAttribute("disabled", false);
+        togglePreviewButton.toggleAttribute("disabled", false);
+        togglePreviewNegativeButton.toggleAttribute("disabled", false);
+    }
+
     const appCss = document.querySelector("style")?.textContent ?? "";
 
-    let prepared = content.replace(
+    let withScrollBar = content.replace(
         /<head>/i,
         `<head><style>${appCss}</style>`
     );
 
-    prepared = prepared.replace(/<html([^>]*)>/i, (match, attrs) => {
+    withScrollBar = withScrollBar.replace(/<html([^>]*)>/i, (match, attrs) => {
         if (/class\s*=/i.test(attrs)) {
             return match.replace(/class\s*=\s*"([^"]*)"/i, `class="$1 ${previewScrollbarClass}"`);
         }
@@ -203,15 +58,42 @@ function loadTemplateFile(name, content) {
         return `<html${attrs} class="${previewScrollbarClass}">`;
     });
 
-    currentTemplateContent = prepared;
-    updatePreviewFromTemplate();
+    templateContent = withScrollBar;
+    computeTemplate();
+}
+
+function closeTemplateFile() {
+    preview.toggleAttribute("hidden", true);
+    closeTemplateButton.toggleAttribute("disabled", true);
+    togglePreviewButton.toggleAttribute("disabled", true);
+    togglePreviewNegativeButton.toggleAttribute("disabled", true);
+    templateFilePath.textContent = noTemplateFileMessage;
+    templateContent = null;
+    computeTemplate();
 }
 
 function loadTextFile(name, content) {
     textFilePath.textContent = name;
+    if (content) {
+        content = normalizeLineBreaks(content);
+        closeTextButton.toggleAttribute("disabled", false);
+    }
+    else {
+        closeTextButton.toggleAttribute("disabled", true);
+    }
     editorInput.value = content;
-    parseEditor();
-    updatePreviewFromTemplate();
+    textContent = content;
+    computeText();
+    computeTemplate();
+}
+
+function closeTextFile() {
+    closeTextButton.toggleAttribute("disabled", true);
+    textFilePath.textContent = noTextFileMessage;
+    editorInput.value = "";
+    textContent = null;
+    computeText();
+    computeTemplate();
 }
 
 function loadTheme(theme) {
@@ -228,39 +110,38 @@ function closeAllMenuDropdowns() {
     }
 }
 
-function parseEditor() {
-    let value = editorInput.value;
-    let highlighted = "";
-
-    const caretPosition = editorInput.selectionDirection === "backward"
-        ? editorInput.selectionStart
-        : editorInput.selectionEnd;
-
-    const metadata = getMetadata(value);
-
-    if (metadata.raw) {
-        value = value.slice(metadata.raw.length);
-        currentTextMetadata = metadata;
-        highlighted += highlightMetadata(caretPosition);
+function parseMetadataLine(line) {
+    const match = line.match(/^([^:\n]+):(.*)$/);
+    if (!match) {
+        return null;
     }
 
-    highlighted += highlightTags(value, caretPosition, metadata.raw.length);
-    editorHighlight.innerHTML = highlighted;
+    return {
+        key: match[1].trim(),
+        value: match[2].trim(),
+    };
 }
 
-function getMetadata(value) {
-    if (!value.startsWith("---\n")) {
-        return { parsed: {}, raw: "" };
-    }
-
+function findMetadataEnd(value) {
     const endMatch = value.slice(4).match(/(?:^|\n)---(?=\n|$)/);
     if (!endMatch) {
-        return { parsed: {}, raw: "" };
+        return null;
     }
 
-    const endIndex = 4 + endMatch.index + (endMatch[0].startsWith("\n") ? 1 : 0);
-    const raw = value.slice(0, endIndex + 3);
+    return 4 + endMatch.index + (endMatch[0].startsWith("\n") ? 1 : 0);
+}
 
+function parseMetadata(value) {
+    if (!value.startsWith("---\n")) {
+        return null;
+    }
+
+    const endIndex = findMetadataEnd(value);
+    if (endIndex == null) {
+        return null;
+    }
+
+    const raw = value.slice(0, endIndex + 3);
     const inner = value.slice(4, endIndex);
     const lines = inner.split("\n");
     const parsed = {};
@@ -268,22 +149,314 @@ function getMetadata(value) {
     for (const line of lines) {
         if (!line.trim()) continue;
 
-        const match = line.match(/^([^:\n]+):(.*)$/);
-        if (!match) {
-            return { parsed: {}, raw: "" };
+        const metadataLine = parseMetadataLine(line);
+        if (!metadataLine) {
+            return null;
         }
 
-        parsed[match[1].trim()] = match[2].trim();
+        parsed[metadataLine.key] = metadataLine.value;
     }
 
-    return { parsed, raw };
+    return {
+        parsed,
+        raw,
+        rawLength: raw.length,
+    };
+}
+
+function getEditorBody(value, metadata) {
+    return metadata ? value.slice(metadata.rawLength) : value;
+}
+
+function getTagConfig(tagValue) {
+    for (const [key, tagConfig] of Object.entries(tags)) {
+        if (!tagConfig.values.includes(tagValue)) {
+            continue;
+        }
+
+        return {
+            key,
+            ...tagConfig,
+        };
+    }
+
+    return null;
+}
+
+function getTagOpen(value, index) {
+    if (value[index] !== "{") {
+        return null;
+    }
+
+    let end = index + 1;
+    while (/[a-zA-Z]/.test(value[end])) {
+        end++;
+    }
+
+    if (end === index + 1 || value[end] !== " ") {
+        return null;
+    }
+
+    const tagValue = value.slice(index + 1, end);
+    const tagConfig = getTagConfig(tagValue);
+    if (!tagConfig) {
+        return null;
+    }
+
+    return {
+        ...tagConfig,
+        value: tagValue,
+        raw: value.slice(index + 1, end + 1),
+        contentStart: end + 1,
+    };
+}
+
+function getTagPairs(value) {
+    const pairs = new Map();
+    const stack = [];
+
+    for (let i = 0; i < value.length; i++) {
+        const tagOpen = getTagOpen(value, i);
+        if (tagOpen) {
+            stack.push(i);
+            i = tagOpen.contentStart - 1;
+            continue;
+        }
+
+        if (value[i] === "}") {
+            const start = stack.pop();
+            if (start != null) {
+                pairs.set(start, i);
+            }
+        }
+    }
+
+    return pairs;
+}
+
+function isBlockTag(tagConfig) {
+    return ["div", "h1", "h2", "h3"].includes(tagConfig?.replacement?.value);
+}
+
+function applyMetadataToTemplate(value) {
+    if (!editorMetadata) {
+        return value;
+    }
+
+    for (const [key, metadataValue] of Object.entries(editorMetadata.parsed)) {
+        value = value.replaceAll(`$${key}$`, metadataValue);
+    }
+
+    return value;
+}
+
+function renderBodyHtml(value) {
+    if (!value) {
+        return "";
+    }
+
+    const pairs = getTagPairs(value);
+    const out = [];
+    const stack = [];
+    let paragraphOpen = false;
+
+    function isParagraphWrappingEnabled() {
+        if (!stack.length) {
+            return true;
+        }
+
+        return stack.every((item) => item.contentLineWrapping);
+    }
+
+    function openParagraph() {
+        if (!isParagraphWrappingEnabled() || paragraphOpen) {
+            return;
+        }
+
+        out.push("<p>");
+        paragraphOpen = true;
+    }
+
+    function closeParagraph() {
+        if (!paragraphOpen) {
+            return;
+        }
+
+        out.push("</p>");
+        paragraphOpen = false;
+    }
+
+    function emitText(text) {
+        if (!text) {
+            return;
+        }
+
+        if (!isParagraphWrappingEnabled()) {
+            if (!/\S/.test(text)) {
+                return;
+            }
+
+            out.push(escapeHtml(text));
+            return;
+        }
+
+        if (!paragraphOpen && !/\S/.test(text)) {
+            return;
+        }
+
+        openParagraph();
+        out.push(escapeHtml(text));
+    }
+
+    function emitHtml(html) {
+        if (isParagraphWrappingEnabled()) {
+            openParagraph();
+        }
+
+        out.push(html);
+    }
+
+    function openTag(tagOpen) {
+        const replacement = tagOpen.replacement;
+
+        const classes = Array.isArray(replacement.classes) ? replacement.classes : [];
+        const classAttribute = classes.length ? ` class="${escapeHtml(classes.join(" "))}"` : "";
+        const isBlock = isBlockTag(tagOpen);
+
+        if (isBlock) {
+            closeParagraph();
+        }
+
+        emitHtml(`<${replacement.value}${classAttribute}>`);
+
+        stack.push({
+            contentLineWrapping: !!replacement.contentLineWrapping,
+            isBlock,
+            name: replacement.value,
+        });
+    }
+
+    function closeTag() {
+        if (!stack.length) {
+            emitText("}");
+            return;
+        }
+
+        const tag = stack.pop();
+        if (tag.isBlock) {
+            closeParagraph();
+            out.push(`</${tag.name}>`);
+            return;
+        }
+
+        emitHtml(`</${tag.name}>`);
+    }
+
+    let i = 0;
+    while (i < value.length) {
+        if (value[i] === "\n") {
+            closeParagraph();
+            i++;
+            continue;
+        }
+
+        const tagOpen = getTagOpen(value, i);
+        if (tagOpen && pairs.has(i)) {
+            const end = pairs.get(i);
+
+            if (tagOpen.replacement.type === "none") {
+                i = end + 1;
+                continue;
+            }
+
+            if (tagOpen.replacement.type === "text") {
+                emitText(tagOpen.replacement.value);
+                i = end + 1;
+                continue;
+            }
+
+            openTag(tagOpen);
+            i = tagOpen.contentStart;
+            continue;
+        }
+
+        if (tagOpen) {
+            emitText("{");
+            i++;
+            continue;
+        }
+
+        if (value[i] === "}") {
+            closeTag();
+            i++;
+            continue;
+        }
+
+        let start = i;
+        while (i < value.length && value[i] !== "\n" && value[i] !== "}" && !getTagOpen(value, i)) {
+            i++;
+        }
+
+        emitText(value.slice(start, i));
+    }
+
+    closeParagraph();
+
+    while (stack.length) {
+        const tag = stack.pop();
+        if (tag.isBlock) {
+            closeParagraph();
+            out.push(`</${tag.name}>`);
+            continue;
+        }
+
+        emitHtml(`</${tag.name}>`);
+    }
+
+    closeParagraph();
+    return out.join("");
+}
+
+function computeText() {
+    editorContent = editorInput.value || null;
+
+    needsSaving = textContent !== editorContent;
+    textFilePathNeedsSaving.toggleAttribute("hidden", !needsSaving);
+
+    if (!editorContent) {
+        editorBody = null;
+        editorMetadata = null;
+        editorHighlight.innerHTML = "";
+        return
+    }
+
+    const caretPosition = editorInput.selectionDirection === "backward"
+        ? editorInput.selectionStart
+        : editorInput.selectionEnd;
+
+    const metadata = parseMetadata(editorContent);
+
+    editorMetadata = metadata;
+    const metadataRawLength = metadata ? metadata.rawLength : 0;
+
+    let highlighted = "";
+    let contentWithoutMetadata = editorContent;
+    if (metadata) {
+        contentWithoutMetadata = getEditorBody(editorContent, metadata);
+        highlighted += highlightMetadata(caretPosition);
+    }
+
+    editorBody = contentWithoutMetadata;
+    highlighted += highlightTags(caretPosition, metadataRawLength);
+
+    editorHighlight.innerHTML = highlighted;
 }
 
 function highlightMetadata(caretPosition) {
-    if (!currentTextMetadata) return;
+    if (!editorMetadata) return "";
 
-    const raw = currentTextMetadata.raw;
-    const classPrefix = caretPosition > 0 && caretPosition < raw.length ? "active" : "inactive";
+    const raw = editorMetadata.raw;
+    const classPrefix = caretPosition >= 0 && caretPosition <= raw.length ? "active" : "inactive";
 
     const dashClass = `${classPrefix}-metadata-dashes`;
     const keyClass = `${classPrefix}-metadata-key`;
@@ -301,11 +474,11 @@ function highlightMetadata(caretPosition) {
         } else if (!line.trim()) {
             html += "";
         } else {
-            const match = line.match(/^([^:\n]+):(.*)$/);
+            const metadataLine = parseMetadataLine(line);
 
-            if (match) {
-                const key = match[1];
-                const value = match[2];
+            if (metadataLine) {
+                const key = metadataLine.key;
+                const value = metadataLine.value;
 
                 html += `<span class="${keyClass}">${escapeHtml(key)}</span>`;
                 html += `<span class="${colonClass}">:</span>`;
@@ -323,68 +496,65 @@ function highlightMetadata(caretPosition) {
     return html;
 }
 
-function highlightTags(value, caretPosition) {
-    const pairs = new Map();
-    const stack = [];
+function highlightTags(caretPosition) {
+    if (!editorBody) return "";
 
-    for (let i = 0; i < value.length; i++) {
-        if (value[i] === "{") {
-            stack.push(i);
-        } else if (value[i] === "}") {
-            const start = stack.pop();
-            if (start != null) {
-                pairs.set(start, i);
-            }
-        }
-    }
+    const pairs = getTagPairs(editorBody);
 
     function render(from, to) {
         let html = "";
         let i = from;
 
         while (i < to) {
-            if (value[i] === "{" && pairs.has(i)) {
+            const tagOpen = getTagOpen(editorBody, i);
+            if (tagOpen && pairs.has(i)) {
                 const end = pairs.get(i);
-                const inner = value.slice(i + 1, end);
-                const match = inner.match(/^([a-zA-Z]+\s)/);
+                const offset = editorMetadata?.rawLength ?? 0;
+                const absoluteStart = offset + i;
+                const absoluteEnd = offset + end;
 
-                if (match) {
-                    const tag = match[1];
-                    const tagExists = Object.keys(tags).find(key =>
-                        tags[key].values.includes(tag.trim())
-                    );
+                const classPrefix =
+                    caretPosition > absoluteStart && caretPosition < absoluteEnd + 1
+                        ? "active"
+                        : "inactive";
 
-                    if (tagExists) {
-                        const contentStart = i + 1 + match[0].length;
-                        const offset = currentTextMetadata?.raw?.length ?? 0;
-                        const absoluteStart = offset + i;
-                        const absoluteEnd = offset + end;
+                const bracketClass = `${classPrefix}-tag-bracket`;
+                const tagClass = `${classPrefix}-tag`;
 
-                        const classPrefix =
-                            caretPosition > absoluteStart && caretPosition < absoluteEnd + 1
-                                ? "active"
-                                : "inactive";
-
-                        const bracketClass = `${classPrefix}-tag-bracket`;
-                        const tagClass = `${classPrefix}-tag`;
-
-                        html += `<span class="${bracketClass}">{</span>`;
-                        html += `<span class="${tagClass}">${escapeHtml(tag)}</span>`;
-                        html += render(contentStart, end);
-                        html += `<span class="${bracketClass}">}</span>`;
-
-                        i = end + 1;
-                        continue;
-                    }
+                let content = render(tagOpen.contentStart, end);
+                if (tagOpen.key === "comment") {
+                    content = `<span class="${classPrefix}-comment">${content}</span>`;
                 }
+
+                html += `<span class="${bracketClass}">{</span>`;
+                html += `<span class="${tagClass}">${escapeHtml(tagOpen.raw)}</span>`;
+                html += content;
+                html += `<span class="${bracketClass}">}</span>`;
+
+                i = end + 1;
+                continue;
             }
 
-            html += escapeHtml(value[i]);
+            html += escapeHtml(editorBody[i]);
             i++;
         }
 
         return html;
     }
 
-    return render(0, value.length);
+    return render(0, editorBody.length);
+}
+
+function computeTemplate() {
+    let value = templateContent;
+
+    if (!value) {
+        preview.srcdoc = "";
+        return
+    }
+
+    value = applyMetadataToTemplate(value);
+    value = value.replaceAll("$body$", renderBodyHtml(editorBody));
+
+    preview.srcdoc = value;
 }

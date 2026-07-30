@@ -8,8 +8,10 @@
     --editor-font-family: "Consolas", "Courier New", "Courier", "monospace";
     --editor-font-size: 14px;
     --hover-transition: background-color 0.25s;
+    --toggle-theme-transition: background-color 0.25s;
+    --toggle-theme-preview-transition: filter 0.25s;
     --preview-min-width: 350px;
-    --dialog-wrapper-backdrop-filter: blur(7.5px);
+    --dialog-wrapper-backdrop-filter: blur(7.5px) brightness(0.5);
 }
 
 :root[theme="light"] {
@@ -19,18 +21,20 @@
     --editor-line-foreground-color: rgba(135, 135, 135, 1);
     --editor-text-foreground-color: rgba(15, 15, 15, 1);
     --editor-button-foreground-color: rgba(45, 45, 45, 1);
+    --editor-button-disabled-foreground-color: rgba(45, 45, 45, 0.5);
+    --editor-button-disabled-foreground-color: rgba(45, 45, 45, 0.5);
     --editor-button-hover-background-color: rgba(200, 200, 200, 1);
     --editor-caret-foreground-color: rgba(0, 0, 0, 1);
     --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
 
     --dropdown-background-color: rgba(245, 245, 245, 1);
     --dropdown-button-foreground-color: rgba(15, 15, 15, 1);
+    --dropdown-button-disabled-foreground-color: rgba(15, 15, 15, 0.5);
     --dropdown-button-hover-background-color: rgba(200, 200, 200, 1);
     --dropdown-line-foreground-color: rgba(165, 165, 165, 1);
     --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
 
     --preview-line-foreground-color: rgba(135, 135, 135, 1);
-    --preview-scrollbar-foreground-color: rgba(85, 85, 85, 1);
 
     --active-tag-foreground-color: rgba(130, 0, 0, 1);
     --active-tag-bracket-foreground-color: rgba(5, 50, 250, 1);
@@ -38,6 +42,7 @@
     --active-metadata-key-foreground-color: rgba(5, 80, 165, 1);
     --active-metadata-value-foreground-color: rgba(165, 20, 20, 1);
     --active-metadata-colon-foreground-color: rgba(15, 15, 15, 1);
+    --active-comment-foreground-color: rgba(0, 130, 0, 1);
 
     --inactive-tag-foreground-color: rgba(130, 0, 0, 0.5);
     --inactive-tag-bracket-foreground-color: rgba(5, 50, 250, 0.5);
@@ -45,6 +50,7 @@
     --inactive-metadata-key-foreground-color: rgba(5, 80, 165, 0.5);
     --inactive-metadata-value-foreground-color: rgba(165, 20, 20, 0.5);
     --inactive-metadata-colon-foreground-color: rgba(15, 15, 15, 0.5);
+    --inactive-comment-foreground-color: rgba(0, 130, 0, 0.5);
 
     --selection-foreground-color: rgba(0, 0, 0, 1);
     --selection-background-color: rgba(180, 180, 180, 1);
@@ -62,12 +68,14 @@
     --editor-line-foreground-color: rgba(85, 85, 85, 1);
     --editor-text-foreground-color: rgba(180, 180, 180, 1);
     --editor-button-foreground-color: rgba(180, 180, 180, 1);
+    --editor-button-disabled-foreground-color: rgba(180, 180, 180, 0.5);
     --editor-button-hover-background-color: rgba(85, 85, 85, 1);
     --editor-caret-foreground-color: rgba(220, 220, 220, 1);
     --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
 
     --dropdown-background-color: rgba(50, 50, 50, 1);
     --dropdown-button-foreground-color: rgba(180, 180, 180, 1);
+    --dropdown-button-disabled-foreground-color: rgba(180, 180, 180, 0.5);
     --dropdown-button-hover-background-color: rgba(85, 85, 85, 1);
     --dropdown-line-foreground-color: rgba(85, 85, 85, 1);
     --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.25);
@@ -80,6 +88,7 @@
     --active-metadata-key-foreground-color: rgba(155, 220, 255, 1);
     --active-metadata-value-foreground-color: rgba(205, 145, 120, 1);
     --active-metadata-colon-foreground-color: rgba(180, 180, 180, 1);
+    --active-comment-foreground-color: rgba(105, 155, 85, 1);
 
     --inactive-tag-foreground-color: rgba(215, 185, 125, 0.5);
     --inactive-tag-bracket-foreground-color: rgba(250, 210, 5, 0.5);
@@ -87,6 +96,7 @@
     --inactive-metadata-key-foreground-color: rgba(155, 220, 255, 0.5);
     --inactive-metadata-value-foreground-color: rgba(205, 145, 120, 0.5);
     --inactive-metadata-colon-foreground-color: rgba(180, 180, 180, 0.5);
+    --inactive-comment-foreground-color: rgba(105, 155, 85, 0.5);
 
     --selection-background-color: rgba(180, 180, 180, 1);
     --selection-foreground-color: rgba(10, 10, 10, 1);
@@ -117,6 +127,7 @@ body {
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing);
+    transition: var(--toggle-theme-transition);
 }
 
 body:has(.preview[hidden]) {
@@ -146,6 +157,7 @@ body:has(.preview[hidden]) .main-wrapper {
     resize: horizontal;
     overflow: hidden;
     border: 1px solid var(--editor-line-foreground-color);
+    transition: var(--toggle-theme-transition);
 }
 
 .toolbar {
@@ -167,16 +179,28 @@ body:has(.preview[hidden]) .main-wrapper {
 
 .text-file-path,
 .template-file-path,
-.file-path-title {
+.file-path-title,
+.text-file-path-needs-saving {
     color: var(--editor-text-foreground-color);
-    font-weight: normal;
     font-size: 11px;
-    letter-spacing: 0.25px;
     white-space: nowrap;
     overflow: hidden;
     user-select: none;
+}
+
+.text-file-path,
+.template-file-path,
+.file-path-title {
+    font-weight: normal;
+    font-size: 11px;
+    letter-spacing: 0.25px;
     text-overflow: ellipsis;
     font-style: italic;
+}
+
+.text-file-path-needs-saving {
+    font-weight: bold;
+    margin-left: calc(var(--spacing) / 3);
 }
 
 .file-path-title {
@@ -216,8 +240,13 @@ body:has(.preview[hidden]) .main-wrapper {
     outline: none;
 }
 
-.button:hover {
+.button:hover:not(:disabled) {
     background: var(--editor-button-hover-background-color);
+}
+
+.button[disabled] {
+    cursor: default;
+    color: var(--editor-button-disabled-foreground-color);
 }
 
 .button svg path {
@@ -262,8 +291,13 @@ body:has(.preview[hidden]) .main-wrapper {
     user-select: none;
 }
 
-.menu-item:hover {
+.menu-item:hover:not(:disabled) {
     background: var(--dropdown-button-hover-background-color);
+}
+
+.menu-item[disabled] {
+    cursor: default;
+    color: var(--dropdown-button-disabled-foreground-color);
 }
 
 .editor-wrapper {
@@ -354,6 +388,14 @@ body:has(.preview[hidden]) .main-wrapper {
     color: var(--inactive-metadata-colon-foreground-color);
 }
 
+.active-comment {
+    color: var(--active-comment-foreground-color);
+}
+
+.inactive-comment {
+    color: var(--inactive-comment-foreground-color);
+}
+
 .preview {
     background: rgb(255, 255, 255);
     height: calc(100vh - (2 * var(--spacing)));
@@ -363,10 +405,12 @@ body:has(.preview[hidden]) .main-wrapper {
     border-radius: var(--border-radius);
     border: 1px solid var(--preview-line-foreground-color);
     padding: var(--spacing);
+    transition: var(--toggle-theme-preview-transition);
+    filter: grayscale(1) contrast(0.85);
 }
 
 .preview[negative] {
-    filter: invert(1) hue-rotate(180deg);
+    filter: invert(1) grayscale(1) contrast(0.85);
 }
 
 .help-dialog-wrapper {

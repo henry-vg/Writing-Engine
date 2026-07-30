@@ -1,19 +1,30 @@
-let currentTextMetadata = null;
-let currentTextBody = null;
-let currentTemplateContent = null;
+let editorContent = null;
+let editorMetadata = null;
+let editorBody = null;
+let textContent = null;
+let templateContent = null;
+let needsSaving = false;
 
 (async () => {
     const cachedText = await dbGet(DBTextKey);
+    let name = noTextFileMessage;
+    let content = null;
     if (cachedText) {
-        loadTextFile(cachedText.name, cachedText.content);
+        name = cachedText.name;
+        content = cachedText.content;
     }
+    loadTextFile(name, content);
 })();
 
 (async () => {
     const cachedTemplate = await dbGet(DBTemplateKey);
+    let name = noTemplateFileMessage;
+    let content = null;
     if (cachedTemplate) {
-        loadTemplateFile(cachedTemplate.name, cachedTemplate.content);
+        name = cachedTemplate.name;
+        content = cachedTemplate.content;
     }
+    loadTemplateFile(name, content);
 })();
 
 (async () => {
@@ -36,6 +47,7 @@ let currentTemplateContent = null;
 
 editorInput.focus();
 editorInput.spellcheck = false;
-preview.toggleAttribute("hidden", false);
+preview.toggleAttribute("hidden", true);
 
-parseEditor();
+computeText();
+computeTemplate();
