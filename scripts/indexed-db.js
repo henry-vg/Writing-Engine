@@ -38,3 +38,14 @@ async function dbSet(key, value) {
         tx.objectStore(DBStore).put({ key, value });
     });
 }
+
+async function dbDelete(key) {
+    const db = await openDb();
+
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction(DBStore, "readwrite");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.objectStore(DBStore).delete(key);
+    });
+}
