@@ -4,6 +4,7 @@ const preview = document.getElementById("preview");
 
 const templateFilePath = document.getElementById("templateFilePath");
 const textFilePath = document.getElementById("textFilePath");
+const textFilePathNeedsSaving = document.getElementById("textFilePathNeedsSaving");
 
 const titlesDropdown = document.getElementById("titles-dropdown");
 const optionsDropdown = document.getElementById("options-dropdown");
@@ -23,7 +24,6 @@ const boldButton = document.getElementById("bold-button");
 const italicButton = document.getElementById("italic-button");
 const underlineButton = document.getElementById("underline-button");
 const strikethroughButton = document.getElementById("strikethrough-button");
-const stanzaButton = document.getElementById("stanza-button");
 
 const editMetadataButton = document.getElementById("edit-metadata-button");
 

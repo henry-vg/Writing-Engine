@@ -7,62 +7,95 @@ const DBPreviewNegativeKey = "preview-negative";
 const defaultTheme = "dark";
 const defaultPreviewNegative = false;
 const previewScrollbarClass = "__preview-iframe-scrollbar";
+const noTemplateFileMessage = "<No Template File>";
+const noTextFileMessage = "<No Text File>";
 
 const tags = {
+    "comment": {
+        "values": ["c", "comment"],
+        "replacement": {
+            "type": "none",
+        }
+    },
     "title1": {
         "values": ["1", "title1", "title"],
         "replacement": {
+            "type": "htmlTag",
             "value": "h1",
         }
     },
     "title2": {
         "values": ["2", "title2", "subtitle"],
         "replacement": {
+            "type": "htmlTag",
             "value": "h2",
         }
     },
     "title3": {
         "values": ["3", "title3"],
         "replacement": {
+            "type": "htmlTag",
             "value": "h3",
         }
     },
     "bold": {
         "values": ["b", "bold"],
         "replacement": {
+            "type": "htmlTag",
             "value": "b",
-            "contentParagraphWrapping": true
+            "contentLineWrapping": {
+                "value": "p"
+            }
         }
     },
     "italic": {
         "values": ["i", "italic"],
         "replacement": {
+            "type": "htmlTag",
             "value": "i",
-            "contentParagraphWrapping": true
+            "contentLineWrapping": {
+                "value": "p"
+            }
         }
     },
     "underline": {
         "values": ["u", "under", "underline"],
         "replacement": {
+            "type": "htmlTag",
             "value": "u",
-            "contentParagraphWrapping": true
+            "contentLineWrapping": {
+                "value": "p"
+            }
         }
     },
     "strikethrough": {
         "values": ["s", "strike", "strikethrough"],
         "replacement": {
+            "type": "htmlTag",
             "value": "s",
-            "contentParagraphWrapping": true
+            "contentLineWrapping": {
+                "value": "p"
+            }
         }
     },
     "stanza": {
         "values": ["stanza"],
         "replacement": {
+            "type": "htmlTag",
             "value": "div",
             "classes": ["stanza"],
-            "contentParagraphWrapping": true
+            "contentLineWrapping": {
+                "value": "p"
+            }
         }
     },
+    "doubleR": {
+        "values": ["doubleR"],
+        "replacement": {
+            "type": "text",
+            "value": "\u211d"
+        }
+    }
 }
 
 const menuElements = [
@@ -78,11 +111,6 @@ const formattingElements = [
     { button: italicButton, tag: tags.italic.values[0] },
     { button: underlineButton, tag: tags.underline.values[0] },
     { button: strikethroughButton, tag: tags.strikethrough.values[0] },
-    { button: stanzaButton, tag: tags.stanza.values[0] },
 ];
 
 const validTags = new Set(Object.values(tags).flatMap(x => x.values));
-const tagKeyByValue = Object.fromEntries(
-    Object.entries(tags).flatMap(([key, { values }]) => values.map((value) => [value, key]))
-);
-
