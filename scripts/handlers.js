@@ -79,8 +79,8 @@ function handleFormattingButtonClick(tag) {
 }
 
 function handleToggleThemeButtonClick() {
-    theme = document.documentElement.getAttribute("theme");
-    newTheme = theme === "dark" ? "light" : "dark";
+    const theme = document.documentElement.getAttribute("theme");
+    const newTheme = theme === "dark" ? "light" : "dark";
     loadTheme(newTheme);
     dbSet(DBThemeKey, newTheme);
 }
@@ -92,6 +92,7 @@ function handleToggleSpellcheckButtonClick() {
 function handleTogglePreviewButtonClick() {
     preview.toggleAttribute("hidden", !preview.hidden);
     togglePreviewNegativeButton.toggleAttribute("disabled", preview.hidden);
+    exportToPDFButton.toggleAttribute("disabled", preview.hidden);
 }
 
 function handleTogglePreviewNegativeButtonClick() {

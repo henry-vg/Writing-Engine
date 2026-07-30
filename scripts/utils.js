@@ -17,8 +17,16 @@ async function openFile(accept) {
         input.type = "file";
         input.accept = accept;
         input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
+        input.addEventListener("cancel", () => resolve(null), { once: true });
         input.click();
     });
+}
+
+function setTemplateButtonsEnabled(enabled) {
+    closeTemplateButton.toggleAttribute("disabled", !enabled);
+    togglePreviewButton.toggleAttribute("disabled", !enabled);
+    togglePreviewNegativeButton.toggleAttribute("disabled", !enabled);
+    exportToPDFButton.toggleAttribute("disabled", !enabled);
 }
 
 function loadTemplateFile(name, content) {
@@ -26,24 +34,16 @@ function loadTemplateFile(name, content) {
 
     if (!content) {
         templateContent = null;
-        togglePreviewButton.disabled = true;
-        togglePreviewNegativeButton.disabled = true;
         preview.toggleAttribute("hidden", true);
-        closeTemplateButton.toggleAttribute("disabled", true);
-        togglePreviewButton.toggleAttribute("disabled", true);
-        togglePreviewNegativeButton.toggleAttribute("disabled", true);
+        setTemplateButtonsEnabled(false);
         return
-    } else {
-        content = normalizeLineBreaks(content);
-        togglePreviewButton.disabled = false;
-        togglePreviewNegativeButton.disabled = false;
-        preview.toggleAttribute("hidden", false);
-        closeTemplateButton.toggleAttribute("disabled", false);
-        togglePreviewButton.toggleAttribute("disabled", false);
-        togglePreviewNegativeButton.toggleAttribute("disabled", false);
     }
 
-    const appCss = document.querySelector("style")?.textContent ?? "";
+    content = normalizeLineBreaks(content);
+    preview.toggleAttribute("hidden", false);
+    setTemplateButtonsEnabled(true);
+
+    const appCss = previewScrollbarStyle.textContent;
 
     let withScrollBar = content.replace(
         /<head>/i,
@@ -64,9 +64,7 @@ function loadTemplateFile(name, content) {
 
 function closeTemplateFile() {
     preview.toggleAttribute("hidden", true);
-    closeTemplateButton.toggleAttribute("disabled", true);
-    togglePreviewButton.toggleAttribute("disabled", true);
-    togglePreviewNegativeButton.toggleAttribute("disabled", true);
+    setTemplateButtonsEnabled(false);
     templateFilePath.textContent = noTemplateFileMessage;
     templateContent = null;
     computeTemplate();
@@ -119,6 +117,8 @@ function parseMetadataLine(line) {
     return {
         key: match[1].trim(),
         value: match[2].trim(),
+        rawKey: match[1],
+        rawValue: match[2],
     };
 }
 
@@ -189,7 +189,7 @@ function getTagOpen(value, index) {
     }
 
     let end = index + 1;
-    while (/[a-zA-Z]/.test(value[end])) {
+    while (end < value.length && /[a-zA-Z0-9]/.test(value[end])) {
         end++;
     }
 
@@ -234,8 +234,12 @@ function getTagPairs(value) {
     return pairs;
 }
 
-function isBlockTag(tagConfig) {
-    return ["div", "h1", "h2", "h3"].includes(tagConfig?.replacement?.value);
+function getClassAttribute(classes) {
+    if (!Array.isArray(classes) || !classes.length) {
+        return "";
+    }
+
+    return ` class="${escapeHtml(classes.join(" "))}"`;
 }
 
 function applyMetadataToTemplate(value) {
@@ -258,9 +262,9 @@ function renderBodyHtml(value) {
     const pairs = getTagPairs(value);
     const out = [];
     const stack = [];
-    let paragraphOpen = false;
+    let openLineName = null;
 
-    function isParagraphWrappingEnabled() {
+    function isLineWrappingEnabled() {
         if (!stack.length) {
             return true;
         }
@@ -268,22 +272,44 @@ function renderBodyHtml(value) {
         return stack.every((item) => item.contentLineWrapping);
     }
 
-    function openParagraph() {
-        if (!isParagraphWrappingEnabled() || paragraphOpen) {
-            return;
+    function getLineWrapping() {
+        if (!stack.length) {
+            return defaultLineWrapping;
         }
 
-        out.push("<p>");
-        paragraphOpen = true;
+        return stack[stack.length - 1].contentLineWrapping;
     }
 
-    function closeParagraph() {
-        if (!paragraphOpen) {
+    function openLine() {
+        if (!isLineWrappingEnabled() || openLineName) {
             return;
         }
 
-        out.push("</p>");
-        paragraphOpen = false;
+        const lineWrapping = getLineWrapping();
+
+        openLineName = lineWrapping.value;
+        out.push(`<${openLineName}${getClassAttribute(lineWrapping.classes)}>`);
+
+        for (const item of stack) {
+            if (!item.isBlock) {
+                out.push(item.openHtml);
+            }
+        }
+    }
+
+    function closeLine() {
+        if (!openLineName) {
+            return;
+        }
+
+        for (let i = stack.length - 1; i >= 0; i--) {
+            if (!stack[i].isBlock) {
+                out.push(`</${stack[i].name}>`);
+            }
+        }
+
+        out.push(`</${openLineName}>`);
+        openLineName = null;
     }
 
     function emitText(text) {
@@ -291,7 +317,7 @@ function renderBodyHtml(value) {
             return;
         }
 
-        if (!isParagraphWrappingEnabled()) {
+        if (!isLineWrappingEnabled()) {
             if (!/\S/.test(text)) {
                 return;
             }
@@ -300,17 +326,17 @@ function renderBodyHtml(value) {
             return;
         }
 
-        if (!paragraphOpen && !/\S/.test(text)) {
+        if (!openLineName && !/\S/.test(text)) {
             return;
         }
 
-        openParagraph();
+        openLine();
         out.push(escapeHtml(text));
     }
 
     function emitHtml(html) {
-        if (isParagraphWrappingEnabled()) {
-            openParagraph();
+        if (isLineWrappingEnabled()) {
+            openLine();
         }
 
         out.push(html);
@@ -319,20 +345,21 @@ function renderBodyHtml(value) {
     function openTag(tagOpen) {
         const replacement = tagOpen.replacement;
 
-        const classes = Array.isArray(replacement.classes) ? replacement.classes : [];
-        const classAttribute = classes.length ? ` class="${escapeHtml(classes.join(" "))}"` : "";
-        const isBlock = isBlockTag(tagOpen);
+        const isBlock = !!replacement.block;
+        const openHtml = `<${replacement.value}${getClassAttribute(replacement.classes)}>`;
 
         if (isBlock) {
-            closeParagraph();
+            closeLine();
+            out.push(openHtml);
+        } else {
+            emitHtml(openHtml);
         }
 
-        emitHtml(`<${replacement.value}${classAttribute}>`);
-
         stack.push({
-            contentLineWrapping: !!replacement.contentLineWrapping,
+            contentLineWrapping: replacement.contentLineWrapping,
             isBlock,
             name: replacement.value,
+            openHtml,
         });
     }
 
@@ -344,7 +371,7 @@ function renderBodyHtml(value) {
 
         const tag = stack.pop();
         if (tag.isBlock) {
-            closeParagraph();
+            closeLine();
             out.push(`</${tag.name}>`);
             return;
         }
@@ -355,7 +382,7 @@ function renderBodyHtml(value) {
     let i = 0;
     while (i < value.length) {
         if (value[i] === "\n") {
-            closeParagraph();
+            closeLine();
             i++;
             continue;
         }
@@ -400,12 +427,10 @@ function renderBodyHtml(value) {
         emitText(value.slice(start, i));
     }
 
-    closeParagraph();
-
     while (stack.length) {
         const tag = stack.pop();
         if (tag.isBlock) {
-            closeParagraph();
+            closeLine();
             out.push(`</${tag.name}>`);
             continue;
         }
@@ -413,7 +438,7 @@ function renderBodyHtml(value) {
         emitHtml(`</${tag.name}>`);
     }
 
-    closeParagraph();
+    closeLine();
     return out.join("");
 }
 
@@ -437,7 +462,6 @@ function computeText() {
     const metadata = parseMetadata(editorContent);
 
     editorMetadata = metadata;
-    const metadataRawLength = metadata ? metadata.rawLength : 0;
 
     let highlighted = "";
     let contentWithoutMetadata = editorContent;
@@ -447,7 +471,7 @@ function computeText() {
     }
 
     editorBody = contentWithoutMetadata;
-    highlighted += highlightTags(caretPosition, metadataRawLength);
+    highlighted += highlightTags(caretPosition);
 
     editorHighlight.innerHTML = highlighted;
 }
@@ -471,18 +495,13 @@ function highlightMetadata(caretPosition) {
 
         if (line === "---") {
             html += `<span class="${dashClass}">---</span>`;
-        } else if (!line.trim()) {
-            html += "";
         } else {
             const metadataLine = parseMetadataLine(line);
 
             if (metadataLine) {
-                const key = metadataLine.key;
-                const value = metadataLine.value;
-
-                html += `<span class="${keyClass}">${escapeHtml(key)}</span>`;
+                html += `<span class="${keyClass}">${escapeHtml(metadataLine.rawKey)}</span>`;
                 html += `<span class="${colonClass}">:</span>`;
-                html += `<span class="${valueClass}">${escapeHtml(value)}</span>`;
+                html += `<span class="${valueClass}">${escapeHtml(metadataLine.rawValue)}</span>`;
             } else {
                 html += escapeHtml(line);
             }

@@ -6,6 +6,7 @@ const DBThemeKey = "theme";
 const DBPreviewNegativeKey = "preview-negative";
 const defaultTheme = "dark";
 const defaultPreviewNegative = false;
+const defaultLineWrapping = { value: "p", classes: [] };
 const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";
@@ -22,6 +23,7 @@ const tags = {
         "replacement": {
             "type": "htmlTag",
             "value": "h1",
+            "block": true,
         }
     },
     "title2": {
@@ -29,6 +31,7 @@ const tags = {
         "replacement": {
             "type": "htmlTag",
             "value": "h2",
+            "block": true,
         }
     },
     "title3": {
@@ -36,6 +39,7 @@ const tags = {
         "replacement": {
             "type": "htmlTag",
             "value": "h3",
+            "block": true,
         }
     },
     "bold": {
@@ -83,6 +87,7 @@ const tags = {
         "replacement": {
             "type": "htmlTag",
             "value": "div",
+            "block": true,
             "classes": ["stanza"],
             "contentLineWrapping": {
                 "value": "p"

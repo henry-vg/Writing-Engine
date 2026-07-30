@@ -7,42 +7,13 @@ let needsSaving = false;
 
 (async () => {
     const cachedText = await dbGet(DBTextKey);
-    let name = noTextFileMessage;
-    let content = null;
-    if (cachedText) {
-        name = cachedText.name;
-        content = cachedText.content;
-    }
-    loadTextFile(name, content);
-})();
+    loadTextFile(cachedText?.name ?? noTextFileMessage, cachedText?.content ?? null);
 
-(async () => {
     const cachedTemplate = await dbGet(DBTemplateKey);
-    let name = noTemplateFileMessage;
-    let content = null;
-    if (cachedTemplate) {
-        name = cachedTemplate.name;
-        content = cachedTemplate.content;
-    }
-    loadTemplateFile(name, content);
-})();
+    loadTemplateFile(cachedTemplate?.name ?? noTemplateFileMessage, cachedTemplate?.content ?? null);
 
-(async () => {
-    const cachedTheme = await dbGet(DBThemeKey);
-    if (cachedTheme) {
-        loadTheme(cachedTheme);
-    } else {
-        loadTheme(defaultTheme);
-    }
-})();
-
-(async () => {
-    const cachedPreviewNegative = await dbGet(DBPreviewNegativeKey);
-    if (cachedPreviewNegative) {
-        loadPreviewNegative(cachedPreviewNegative);
-    } else {
-        loadPreviewNegative(defaultPreviewNegative);
-    }
+    loadTheme(await dbGet(DBThemeKey) ?? defaultTheme);
+    loadPreviewNegative(await dbGet(DBPreviewNegativeKey) ?? defaultPreviewNegative);
 })();
 
 editorInput.focus();

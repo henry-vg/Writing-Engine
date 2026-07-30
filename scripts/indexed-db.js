@@ -17,35 +17,48 @@ function openDb() {
 }
 
 async function dbGet(key) {
-    const db = await openDb();
+    try {
+        const db = await openDb();
 
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DBStore, "readonly");
-        const request = tx.objectStore(DBStore).get(key);
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(DBStore, "readonly");
+            const request = tx.objectStore(DBStore).get(key);
 
-        request.onsuccess = () => resolve(request.result?.value ?? null);
-        request.onerror = () => reject(request.error);
-    });
+            request.onsuccess = () => resolve(request.result?.value ?? null);
+            request.onerror = () => reject(request.error);
+        });
+    } catch (error) {
+        console.warn(`dbGet("${key}") failed:`, error);
+        return null;
+    }
 }
 
 async function dbSet(key, value) {
-    const db = await openDb();
+    try {
+        const db = await openDb();
 
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DBStore, "readwrite");
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-        tx.objectStore(DBStore).put({ key, value });
-    });
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(DBStore, "readwrite");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.objectStore(DBStore).put({ key, value });
+        });
+    } catch (error) {
+        console.warn(`dbSet("${key}") failed:`, error);
+    }
 }
 
 async function dbDelete(key) {
-    const db = await openDb();
+    try {
+        const db = await openDb();
 
-    return new Promise((resolve, reject) => {
-        const tx = db.transaction(DBStore, "readwrite");
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error);
-        tx.objectStore(DBStore).delete(key);
-    });
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(DBStore, "readwrite");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.objectStore(DBStore).delete(key);
+        });
+    } catch (error) {
+        console.warn(`dbDelete("${key}") failed:`, error);
+    }
 }
