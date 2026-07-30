@@ -108,6 +108,46 @@ function closeAllMenuDropdowns() {
     }
 }
 
+function getTagButtonTitle(buttonConfig) {
+    if (!buttonConfig.shortcut) {
+        return buttonConfig.label;
+    }
+
+    return `${buttonConfig.label} (Ctrl+${buttonConfig.shortcut.toUpperCase()})`;
+}
+
+function buildTagButtons() {
+    const tagButtons = [];
+
+    for (const tagConfig of Object.values(tags)) {
+        const buttonConfig = tagConfig.button;
+        if (!buttonConfig) {
+            continue;
+        }
+
+        const container = tagButtonContainers[buttonConfig.container];
+        if (!container) {
+            continue;
+        }
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = container.className;
+        button.title = getTagButtonTitle(buttonConfig);
+
+        if (buttonConfig.icon) {
+            button.innerHTML = `<svg viewBox="0 0 24 24"><path d="${buttonConfig.icon}"></path></svg>`;
+        } else {
+            button.textContent = buttonConfig.label;
+        }
+
+        container.element.appendChild(button);
+        tagButtons.push({ button, tagValue: tagConfig.values[0] });
+    }
+
+    return tagButtons;
+}
+
 function parseMetadataLine(line) {
     const match = line.match(/^([^:\n]+):(.*)$/);
     if (!match) {
@@ -178,6 +218,16 @@ function getTagConfig(tagValue) {
             key,
             ...tagConfig,
         };
+    }
+
+    return null;
+}
+
+function getTagConfigByShortcut(shortcut) {
+    for (const tagConfig of Object.values(tags)) {
+        if (tagConfig.button?.shortcut === shortcut) {
+            return tagConfig;
+        }
     }
 
     return null;
@@ -541,7 +591,7 @@ function highlightTags(caretPosition) {
                 const tagClass = `${classPrefix}-tag`;
 
                 let content = render(tagOpen.contentStart, end);
-                if (tagOpen.key === "comment") {
+                if (tagOpen.replacement.type === "none") {
                     content = `<span class="${classPrefix}-comment">${content}</span>`;
                 }
 

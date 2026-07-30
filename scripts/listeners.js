@@ -9,8 +9,8 @@ editorInput.addEventListener("input", () => handleEditorInputInput())
 editorInput.addEventListener("dblclick", () => handleEditorInputDoubleClick())
 editorInput.addEventListener("scroll", () => handleEditorInputScroll())
 
-for (const { button, tag } of formattingElements) {
-    button.addEventListener("click", () => handleFormattingButtonClick(tag))
+for (const { button, tagValue } of buildTagButtons()) {
+    button.addEventListener("click", () => handleFormattingButtonClick(tagValue))
 }
 
 toggleThemeButton.addEventListener("click", () => handleToggleThemeButtonClick())

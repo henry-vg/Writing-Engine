@@ -18,13 +18,7 @@ const togglePreviewButton = document.getElementById("toggle-preview-button");
 const togglePreviewNegativeButton = document.getElementById("toggle-preview-negative-button");
 
 const titlesButton = document.getElementById("titles-button");
-const title1Button = document.getElementById("title1-button");
-const title2Button = document.getElementById("title2-button");
-const title3Button = document.getElementById("title3-button");
-const boldButton = document.getElementById("bold-button");
-const italicButton = document.getElementById("italic-button");
-const underlineButton = document.getElementById("underline-button");
-const strikethroughButton = document.getElementById("strikethrough-button");
+const toolbarTagButtons = document.getElementById("toolbarTagButtons");
 
 const editMetadataButton = document.getElementById("edit-metadata-button");
 

@@ -11,38 +11,18 @@ function handleDocumentKeyDown(e) {
         closeAllMenuDropdowns();
     }
 
-    if (document.activeElement === editorInput) {
-        const ctrlOrCmd = e.ctrlKey || e.metaKey;
+    if (document.activeElement !== editorInput) return;
 
-        if (!ctrlOrCmd) return;
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
 
-        switch (e.key.toLowerCase()) {
-            case "1":
-                e.preventDefault();
-                title1Button.click();
-                break;
-            case "2":
-                e.preventDefault();
-                title2Button.click();
-                break;
-            case "3":
-                e.preventDefault();
-                title3Button.click();
-                break;
-            case "b":
-                e.preventDefault();
-                boldButton.click();
-                break;
-            case "i":
-                e.preventDefault();
-                italicButton.click();
-                break;
-            case "u":
-                e.preventDefault();
-                underlineButton.click();
-                break;
-        }
-    }
+    if (!ctrlOrCmd) return;
+
+    const tagConfig = getTagConfigByShortcut(e.key.toLowerCase());
+
+    if (!tagConfig) return;
+
+    e.preventDefault();
+    handleFormattingButtonClick(tagConfig.values[0]);
 }
 
 function handleDocumentSelectionChange() {
@@ -74,7 +54,7 @@ function handleEditorInputScroll() {
     editorHighlight.scrollLeft = editorInput.scrollLeft;
 }
 
-function handleFormattingButtonClick(tag) {
+function handleFormattingButtonClick(tagValue) {
 
 }
 

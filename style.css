@@ -213,6 +213,11 @@ body:has(.preview[hidden]) .main-wrapper {
     display: inline-flex;
 }
 
+.toolbar-tag-buttons {
+    display: flex;
+    gap: calc(var(--spacing) / 2);
+}
+
 .toolbar__divider {
     width: 1px;
     align-self: stretch;
