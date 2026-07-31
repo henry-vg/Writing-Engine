@@ -1,5 +1,7 @@
 window.addEventListener("blur", () => handleWindowBlur())
 window.addEventListener("beforeunload", (e) => handleWindowBeforeUnload(e))
+window.addEventListener("error", (e) => handleWindowError(e))
+window.addEventListener("unhandledrejection", (e) => handleWindowUnhandledRejection(e))
 
 document.addEventListener("click", () => handleDocumentClick())
 document.addEventListener("keydown", (e) => handleDocumentKeyDown(e))
@@ -39,6 +41,6 @@ helpButton.addEventListener("click", () => handleHelpButtonClick())
 
 helpCloseButton.addEventListener("click", () => handleHelpCloseButtonClick())
 
-confirmSaveButton.addEventListener("click", () => closeConfirmDialog("save"))
-confirmProceedButton.addEventListener("click", () => closeConfirmDialog("proceed"))
-confirmCancelButton.addEventListener("click", () => closeConfirmDialog("cancel"))
+dialogSaveButton.addEventListener("click", () => closeDialog("save"))
+dialogProceedButton.addEventListener("click", () => closeDialog("proceed"))
+dialogCancelButton.addEventListener("click", () => closeDialog("cancel"))
