@@ -41,7 +41,7 @@ function handleDocumentKeyDown(e) {
 
     if (menuShortcut) {
         e.preventDefault();
-        menuShortcut.button.click();
+        document.getElementById(menuShortcut.id).click();
         return;
     }
 

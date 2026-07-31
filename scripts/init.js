@@ -27,9 +27,7 @@ let previewScroll = { x: 0, y: 0 };
     loadSpellcheck(await dbGet(DBSpellcheckKey) ?? defaultSpellcheck);
 })();
 
-for (const { button, label, shortcut, shift } of menuShortcuts) {
-    button.title = getShortcutTitle(label, shortcut, shift);
-}
+buildMenuItems();
 
 editorInput.focus();
 preview.toggleAttribute("hidden", true);

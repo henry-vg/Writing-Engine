@@ -187,10 +187,17 @@ const menuElements = [
     { button: optionsButton, dropdown: optionsDropdown },
 ];
 
-const menuShortcuts = [
-    { button: openTextButton, label: "Open Text", shortcut: "o" },
-    { button: saveTextButton, label: "Save Text", shortcut: "s" },
-    { button: saveTextAsButton, label: "Save Text As", shortcut: "s", shift: true },
+const optionsMenuItems = [
+    { id: "new-text-button", label: "New Text..." },
+    { id: "open-text-button", label: "Open Text...", shortcut: "o" },
+    { id: "save-text-button", label: "Save Text", shortcut: "s" },
+    { id: "save-text-as-button", label: "Save Text As...", shortcut: "s", shift: true },
+    { id: "close-text-button", label: "Close Text" },
+    { id: "open-template-button", label: "Open Template..." },
+    { id: "close-template-button", label: "Close Template" },
+    { id: "export-to-pdf-button", label: "Export To PDF..." },
+    { id: "clear-data-button", label: "Clear Stored Data..." },
+    { id: "help-button", label: "Help" },
 ];
 
 const tagButtonContainers = {

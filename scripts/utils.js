@@ -277,7 +277,21 @@ function getShortcutTitle(label, shortcut, shift) {
 }
 
 function getMenuShortcut(key, shift) {
-    return menuShortcuts.find((item) => item.shortcut === key && !!item.shift === shift) ?? null;
+    return optionsMenuItems.find((item) => item.shortcut === key && !!item.shift === shift) ?? null;
+}
+
+function buildMenuItems() {
+    for (const item of optionsMenuItems) {
+        const button = document.getElementById(item.id);
+
+        if (!button) {
+            showError(`there is no menu item with the id "${item.id}"`);
+            continue;
+        }
+
+        button.textContent = item.label;
+        button.title = getShortcutTitle(item.label, item.shortcut, item.shift);
+    }
 }
 
 function buildTagButtons() {
