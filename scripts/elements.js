@@ -1,7 +1,7 @@
 const editorInput = document.getElementById("editorInput");
 const editorHighlight = document.getElementById("editorHighlight");
 const preview = document.getElementById("preview");
-const previewScrollbarStyle = document.getElementById("previewScrollbarStyle");
+const previewScrollbarStyle = document.getElementById("preview-scrollbar-style");
 
 const templateFilePath = document.getElementById("templateFilePath");
 const textFilePath = document.getElementById("textFilePath");

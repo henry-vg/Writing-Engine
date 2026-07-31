@@ -87,7 +87,7 @@ function handleFormattingButtonClick(tagValue) {
 
     editorInput.focus();
 
-    const metadataLength = editorMetadata?.rawLength ?? 0;
+    const metadataLength = getMetadataLength();
     const selectionStart = editorInput.selectionStart;
     const selectionEnd = editorInput.selectionEnd;
 
@@ -147,7 +147,7 @@ function handlePreviewLoad() {
 }
 
 function handleTogglePreviewNegativeButtonClick() {
-    const negative = preview.getAttribute("negative") === null;
+    const negative = !preview.hasAttribute("negative");
     loadPreviewNegative(negative);
     dbSet(DBPreviewNegativeKey, negative);
 }
@@ -157,23 +157,24 @@ function handleEditMetadataButtonClick() {
 
     const existingKeys = editorMetadata ? Object.keys(editorMetadata.parsed) : [];
     const missingKeys = getTemplateMetadataKeys().filter((key) => !existingKeys.includes(key));
-    const lines = missingKeys.map((key) => `${key}: `).join("\n");
+    const lines = missingKeys.map(getMetadataLine).join("\n");
+    const fenceLine = `${metadataFence}\n`;
 
     if (!editorMetadata) {
-        replaceEditorRange(0, 0, `---\n${lines}\n---\n`);
-        moveCaretToMetadataValue("---\n".length, missingKeys[0]);
+        replaceEditorRange(0, 0, `${fenceLine}${lines}\n${fenceLine}`);
+        moveCaretToMetadataValue(fenceLine.length, missingKeys[0]);
         return;
     }
 
     if (missingKeys.length) {
-        const insertAt = editorMetadata.rawLength - "---".length;
+        const insertAt = getMetadataLength() - metadataFence.length;
 
         replaceEditorRange(insertAt, insertAt, `${lines}\n`);
         moveCaretToMetadataValue(insertAt, missingKeys[0]);
         return;
     }
 
-    moveCaretToMetadataValue("---\n".length, null);
+    moveCaretToMetadataValue(fenceLine.length, null);
 }
 
 function handleMenuDropdownButtonClick(e, dropdown) {

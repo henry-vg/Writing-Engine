@@ -271,6 +271,10 @@ function buildTagButtons() {
     return tagButtons;
 }
 
+function getMetadataLine(key) {
+    return `${key}: `;
+}
+
 function parseMetadataLine(line) {
     const match = line.match(/^([^:\n]+):(.*)$/);
     if (!match) return null;
@@ -284,26 +288,33 @@ function parseMetadataLine(line) {
 }
 
 function findMetadataEnd(value) {
-    const endMatch = value.slice(4).match(/(?:^|\n)---(?=\n|$)/);
-    if (!endMatch) {
-        return null;
+    const fenceLine = `\n${metadataFence}`;
+    let index = value.indexOf(fenceLine, metadataFence.length);
+
+    while (index !== -1) {
+        const lineEnd = index + fenceLine.length;
+
+        if (lineEnd === value.length || value[lineEnd] === "\n") {
+            return index + 1;
+        }
+
+        index = value.indexOf(fenceLine, lineEnd);
     }
 
-    return 4 + endMatch.index + (endMatch[0].startsWith("\n") ? 1 : 0);
+    return null;
 }
 
 function parseMetadata(value) {
-    if (!value.startsWith("---\n")) {
-        return null;
-    }
+    const opening = `${metadataFence}\n`;
+
+    if (!value.startsWith(opening)) return null;
 
     const endIndex = findMetadataEnd(value);
-    if (endIndex == null) {
-        return null;
-    }
 
-    const raw = value.slice(0, endIndex + 3);
-    const inner = value.slice(4, endIndex);
+    if (endIndex === null) return null;
+
+    const raw = value.slice(0, endIndex + metadataFence.length);
+    const inner = value.slice(opening.length, endIndex);
     const lines = inner.split("\n");
     const parsed = {};
 
@@ -323,6 +334,14 @@ function parseMetadata(value) {
         raw,
         rawLength: raw.length,
     };
+}
+
+function getMetadataLength() {
+    return editorMetadata?.rawLength ?? 0;
+}
+
+function isMetadataActive(caretPosition) {
+    return editorMetadata !== null && caretPosition <= editorMetadata.rawLength;
 }
 
 function getEditorBody(value, metadata) {
@@ -481,7 +500,7 @@ function wrapEditorRange(start, end, tagValue) {
 }
 
 function moveCaretToMetadataValue(lineStart, key) {
-    const caret = lineStart + (key ? `${key}: `.length : 0);
+    const caret = lineStart + (key ? getMetadataLine(key).length : 0);
 
     editorInput.setSelectionRange(caret, caret);
     editorInput.scrollTop = 0;
@@ -522,12 +541,11 @@ function applyMetadataToTemplate(value) {
     return value;
 }
 
-function renderBodyHtml(value) {
-    if (!value) {
-        return "";
-    }
+function renderBodyHtml() {
+    if (!editorBody) return "";
 
-    const pairs = getTagPairs(value);
+    const value = editorBody;
+    const pairs = editorTagPairs;
     const out = [];
     const stack = [];
     let openLineName = null;
@@ -713,12 +731,14 @@ function getCaretPosition() {
         : editorInput.selectionEnd;
 }
 
-function getHighlightWindow(length, center) {
+function getHighlightWindow(caretPosition) {
+    const length = editorBody.length;
+
     if (length <= highlightWindowSize) {
         return { start: 0, end: length, step: 0 };
     }
 
-    const step = Math.round(center / highlightWindowStep);
+    const step = Math.round((caretPosition - getMetadataLength()) / highlightWindowStep);
     const quantizedCenter = step * highlightWindowStep;
     const half = highlightWindowSize / 2;
 
@@ -729,12 +749,8 @@ function getHighlightWindow(length, center) {
     };
 }
 
-function getHighlightCenter(caretPosition) {
-    return caretPosition - (editorMetadata?.rawLength ?? 0);
-}
-
 function getActiveTagRange(caretPosition) {
-    const offset = editorMetadata?.rawLength ?? 0;
+    const offset = getMetadataLength();
     let innermost = null;
 
     for (const [start, end] of editorTagPairs) {
@@ -747,13 +763,11 @@ function getActiveTagRange(caretPosition) {
         }
     }
 
-    return innermost ? `${innermost.start}-${innermost.end}` : "none";
+    return innermost && `${innermost.start}-${innermost.end}`;
 }
 
 function getHighlightState(caretPosition, highlightWindow) {
-    const metadataActive = editorMetadata !== null && caretPosition <= editorMetadata.rawLength;
-
-    return `${metadataActive}|${getActiveTagRange(caretPosition)}|${highlightWindow.step}`;
+    return `${isMetadataActive(caretPosition)}|${getActiveTagRange(caretPosition)}|${highlightWindow.step}`;
 }
 
 function renderHighlight(caretPosition, highlightWindow) {
@@ -785,11 +799,11 @@ function computeText() {
     const metadata = parseMetadata(editorContent);
 
     editorMetadata = metadata;
-    editorBody = metadata ? getEditorBody(editorContent, metadata) : editorContent;
+    editorBody = getEditorBody(editorContent, metadata);
     editorTagPairs = getTagPairs(editorBody);
 
     const caretPosition = getCaretPosition();
-    const highlightWindow = getHighlightWindow(editorBody.length, getHighlightCenter(caretPosition));
+    const highlightWindow = getHighlightWindow(caretPosition);
 
     lastHighlightState = getHighlightState(caretPosition, highlightWindow);
     renderHighlight(caretPosition, highlightWindow);
@@ -799,7 +813,7 @@ function refreshHighlight() {
     if (!editorContent) return;
 
     const caretPosition = getCaretPosition();
-    const highlightWindow = getHighlightWindow(editorBody.length, getHighlightCenter(caretPosition));
+    const highlightWindow = getHighlightWindow(caretPosition);
     const state = getHighlightState(caretPosition, highlightWindow);
 
     if (state === lastHighlightState) return;
@@ -812,7 +826,7 @@ function highlightMetadata(caretPosition) {
     if (!editorMetadata) return "";
 
     const raw = editorMetadata.raw;
-    const classPrefix = caretPosition >= 0 && caretPosition <= raw.length ? "active" : "inactive";
+    const classPrefix = isMetadataActive(caretPosition) ? "active" : "inactive";
 
     const dashClass = `${classPrefix}-metadata-dashes`;
     const keyClass = `${classPrefix}-metadata-key`;
@@ -825,7 +839,7 @@ function highlightMetadata(caretPosition) {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
-        if (line === "---") {
+        if (line === metadataFence) {
             html += `<span class="${dashClass}">---</span>`;
         } else {
             const metadataLine = parseMetadataLine(line);
@@ -850,8 +864,6 @@ function highlightMetadata(caretPosition) {
 function highlightTags(caretPosition, highlightWindow) {
     if (!editorBody) return "";
 
-    const pairs = editorTagPairs;
-
     function render(from, to) {
         let html = "";
         let i = from;
@@ -866,9 +878,9 @@ function highlightTags(caretPosition, highlightWindow) {
             }
 
             const tagOpen = getTagOpen(editorBody, i);
-            if (tagOpen && pairs.has(i)) {
-                const end = pairs.get(i);
-                const offset = editorMetadata?.rawLength ?? 0;
+            if (tagOpen && editorTagPairs.has(i)) {
+                const end = editorTagPairs.get(i);
+                const offset = getMetadataLength();
                 const absoluteStart = offset + i;
                 const absoluteEnd = offset + end;
 
@@ -897,7 +909,7 @@ function highlightTags(caretPosition, highlightWindow) {
             let start = i;
             while (i < to
                 && !getEscapeAt(editorBody, i)
-                && !(getTagOpen(editorBody, i) && pairs.has(i))) {
+                && !(getTagOpen(editorBody, i) && editorTagPairs.has(i))) {
                 i++;
             }
 
@@ -923,7 +935,7 @@ function computeTemplate() {
     }
 
     value = applyMetadataToTemplate(value);
-    value = value.replaceAll(`$${templateBodyKey}$`, renderBodyHtml(editorBody));
+    value = value.replaceAll(`$${templateBodyKey}$`, renderBodyHtml());
 
     previewScroll = {
         x: preview.contentWindow?.scrollX ?? 0,
