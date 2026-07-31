@@ -872,7 +872,7 @@ function highlightMetadata(caretPosition) {
         const line = lines[i];
 
         if (line === metadataFence) {
-            html += `<span class="${dashClass}">---</span>`;
+            html += `<span class="${dashClass}">${escapeHtml(metadataFence)}</span>`;
         } else {
             const metadataLine = parseMetadataLine(line);
 
