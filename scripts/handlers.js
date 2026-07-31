@@ -233,7 +233,7 @@ async function handleSaveTextAsButtonClick() {
 async function handleCloseTextButtonClick() {
     const confirmed = needsSaving
         ? await confirmDiscardChanges()
-        : await confirmAction(`Close ${textFilePath.textContent}?`);
+        : await confirmAction(getFileMessage(closeFileMessage, textFilePath.textContent));
 
     if (!confirmed) return;
 
@@ -254,7 +254,7 @@ async function handleOpenTemplateButtonClick() {
 }
 
 async function handleCloseTemplateButtonClick() {
-    if (!await confirmAction(`Close ${templateFilePath.textContent}?`)) return;
+    if (!await confirmAction(getFileMessage(closeFileMessage, templateFilePath.textContent))) return;
 
     await dbDelete(DBTemplateKey);
     closeTemplateFile();

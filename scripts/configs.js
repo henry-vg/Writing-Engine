@@ -30,9 +30,24 @@ const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";
 const errorMessagePrefix = "ERROR: ";
+const fileNamePlaceholder = "$file$";
+const saveChangesMessage = "Save changes to $file$ before closing?";
+const closeFileMessage = "Close $file$?";
 const clearDataMessage = "Clear the stored text, template and preferences?";
-const enableSpellcheckMessage = "Enable spellcheck";
-const disableSpellcheckMessage = "Disable spellcheck";
+const enableSpellcheckMessage = "Enable Spellcheck";
+const disableSpellcheckMessage = "Disable Spellcheck";
+
+const dialogLabels = {
+    save: "Save",
+    discard: "Don't Save",
+    confirm: "OK",
+    cancel: "Cancel",
+};
+
+const shortcutModifiers = {
+    plain: "Ctrl",
+    shift: "Ctrl+Shift",
+};
 
 const textFileTypes = [{ description: "Text", accept: { "text/plain": [".txt", ".md"] } }];
 const templateFileTypes = [{ description: "HTML", accept: { "text/html": [".html", ".htm"] } }];

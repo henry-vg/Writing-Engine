@@ -226,18 +226,23 @@ function closeDialog(answer) {
     dialogResolve = null;
 }
 
+function getFileMessage(message, name) {
+    return message.replace(fileNamePlaceholder, name);
+}
+
 function askToSaveChanges(name) {
-    return openDialog(`Save changes to ${name} before closing?`, "Save", "Don't Save", "Cancel");
+    return openDialog(getFileMessage(saveChangesMessage, name),
+        dialogLabels.save, dialogLabels.discard, dialogLabels.cancel);
 }
 
 async function confirmAction(message) {
-    return await openDialog(message, null, "OK", "Cancel") === "proceed";
+    return await openDialog(message, null, dialogLabels.confirm, dialogLabels.cancel) === "proceed";
 }
 
 function showError(message, error) {
     const reason = error?.message ? ` (${error.message})` : "";
 
-    return openDialog(`${errorMessagePrefix}${message}${reason}`, null, "OK", null);
+    return openDialog(`${errorMessagePrefix}${message}${reason}`, null, dialogLabels.confirm, null);
 }
 
 async function confirmDiscardChanges() {
@@ -266,7 +271,7 @@ function openEditorContextMenu(x, y) {
 function getShortcutTitle(label, shortcut, shift) {
     if (!shortcut) return label;
 
-    const modifiers = shift ? "Ctrl+Shift" : "Ctrl";
+    const modifiers = shift ? shortcutModifiers.shift : shortcutModifiers.plain;
 
     return `${label} (${modifiers}+${shortcut.toUpperCase()})`;
 }
