@@ -91,7 +91,11 @@ function handleEditorInputScroll() {
 
 function handleFormattingButtonClick(tagValue) {
     const tagConfig = getTagConfig(tagValue);
-    if (!tagConfig) return;
+
+    if (!tagConfig) {
+        showError(`there is no tag configured for "${tagValue}"`);
+        return;
+    }
 
     editorInput.focus();
 

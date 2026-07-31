@@ -169,8 +169,13 @@ ERROR: could not write to "livro.txt" (device is full)
 ```
 
 O que passa por ali: leitura e escrita no IndexedDB, abrir e salvar arquivos, permissão de escrita
-negada, a impressão, e — como rede de segurança — `error` e `unhandledrejection` na janela, para que
-até o que eu não previ apareça. Cancelar um diálogo de arquivo **não** é erro e não avisa nada.
+negada ou recusada pelo contexto, a impressão, e — como rede de segurança — `error` e
+`unhandledrejection` na janela, para que até o que eu não previ apareça. Cancelar um diálogo de arquivo
+**não** é erro e não avisa nada.
+
+Abrir por `file://` avisa na inicialização, e avisa de novo em cada tentativa de abrir ou salvar. Nesse
+contexto o Chrome deixa as funções de picker existirem e só recusa quando são chamadas, então checar se
+a API existe não basta: o protocolo é verificado direto.
 
 Uma exceção deliberada: metadata mal formada não abre diálogo. O parser simplesmente não reconhece o
 bloco, porque avisar a cada tecla enquanto a linha está sendo escrita tornaria o editor inutilizável.

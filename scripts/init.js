@@ -31,6 +31,8 @@ for (const { button, label, shortcut, shift } of menuShortcuts) {
     button.title = getShortcutTitle(label, shortcut, shift);
 }
 
+if (location.protocol === "file:") showError(fileProtocolMessage);
+
 editorInput.focus();
 preview.toggleAttribute("hidden", true);
 

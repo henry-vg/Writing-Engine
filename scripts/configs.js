@@ -30,6 +30,7 @@ const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";
 const errorMessagePrefix = "ERROR: ";
+const fileProtocolMessage = "opening and saving files needs the app to be served over http, not opened from file://";
 const enableSpellcheckMessage = "Enable spellcheck";
 const disableSpellcheckMessage = "Disable spellcheck";
 

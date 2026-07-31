@@ -11,15 +11,22 @@ function normalizeLineBreaks(text) {
     return text.replaceAll("\r\n", "\n");
 }
 
-function hasFilePickers() {
-    if (window.showOpenFilePicker && window.showSaveFilePicker) return true;
+function hasFileAccess() {
+    if (location.protocol === "file:") {
+        showError(fileProtocolMessage);
+        return false;
+    }
 
-    showError("this browser cannot open or save files: the File System Access API is unavailable");
-    return false;
+    if (!window.showOpenFilePicker || !window.showSaveFilePicker) {
+        showError("this browser cannot open or save files: the File System Access API is unavailable");
+        return false;
+    }
+
+    return true;
 }
 
 async function pickFileToOpen(types) {
-    if (!hasFilePickers()) return null;
+    if (!hasFileAccess()) return null;
 
     try {
         const [handle] = await window.showOpenFilePicker({ types });
@@ -31,7 +38,7 @@ async function pickFileToOpen(types) {
 }
 
 async function pickFileToSave(suggestedName, types) {
-    if (!hasFilePickers()) return null;
+    if (!hasFileAccess()) return null;
 
     try {
         return await window.showSaveFilePicker({ suggestedName, types });
@@ -56,9 +63,14 @@ async function writeFile(handle, content) {
 async function hasWritePermission(handle) {
     const options = { mode: "readwrite" };
 
-    if (await handle.queryPermission(options) === "granted") return true;
+    try {
+        if (await handle.queryPermission(options) === "granted") return true;
 
-    if (await handle.requestPermission(options) === "granted") return true;
+        if (await handle.requestPermission(options) === "granted") return true;
+    } catch (error) {
+        showError(`could not request permission to write to "${handle.name}"`, error);
+        return false;
+    }
 
     showError(`no permission to write to "${handle.name}"`);
     return false;
