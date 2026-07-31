@@ -39,6 +39,7 @@ const closeTextButton = document.getElementById("close-text-button");
 const openTemplateButton = document.getElementById("open-template-button");
 const closeTemplateButton = document.getElementById("close-template-button");
 const exportToPDFButton = document.getElementById("export-to-pdf-button");
+const clearDataButton = document.getElementById("clear-data-button");
 const helpButton = document.getElementById("help-button");
 
 const helpCloseButton = document.getElementById("help-close-button");

@@ -268,6 +268,19 @@ function handleExportToPDFButtonClick() {
     }
 }
 
+async function handleClearDataButtonClick() {
+    if (!await confirmAction(clearDataMessage)) return;
+
+    await dbClear();
+
+    closeTextFile();
+    closeTemplateFile();
+    loadTheme(defaultTheme);
+    loadPreviewVisible(defaultPreviewVisible);
+    loadPreviewNegative(defaultPreviewNegative);
+    loadSpellcheck(defaultSpellcheck);
+}
+
 function handleHelpButtonClick() {
     helpDialogWrapper.toggleAttribute("hidden", false);
 }

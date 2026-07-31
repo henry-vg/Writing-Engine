@@ -37,6 +37,7 @@ closeTextButton.addEventListener("click", () => handleCloseTextButtonClick())
 openTemplateButton.addEventListener("click", () => handleOpenTemplateButtonClick())
 closeTemplateButton.addEventListener("click", () => handleCloseTemplateButtonClick())
 exportToPDFButton.addEventListener("click", () => handleExportToPDFButtonClick())
+clearDataButton.addEventListener("click", () => handleClearDataButtonClick())
 helpButton.addEventListener("click", () => handleHelpButtonClick())
 
 helpCloseButton.addEventListener("click", () => handleHelpCloseButtonClick())

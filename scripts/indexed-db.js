@@ -48,6 +48,21 @@ async function dbSet(key, value) {
     }
 }
 
+async function dbClear() {
+    try {
+        const db = await openDb();
+
+        return await new Promise((resolve, reject) => {
+            const tx = db.transaction(DBStore, "readwrite");
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+            tx.objectStore(DBStore).clear();
+        });
+    } catch (error) {
+        showError("could not clear the browser storage", error);
+    }
+}
+
 async function dbDelete(key) {
     try {
         const db = await openDb();

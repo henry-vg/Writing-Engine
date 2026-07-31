@@ -30,6 +30,7 @@ const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";
 const errorMessagePrefix = "ERROR: ";
+const clearDataMessage = "Clear the stored text, template and preferences?";
 const enableSpellcheckMessage = "Enable spellcheck";
 const disableSpellcheckMessage = "Disable spellcheck";
 
