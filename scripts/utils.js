@@ -289,12 +289,20 @@ function buildMenuItems() {
             continue;
         }
 
-        const tooltip = item.tooltip ?? item.label;
-
-        if (item.label) button.textContent = item.label;
-
-        if (tooltip) button.title = getShortcutTitle(tooltip, item.shortcut, item.shift);
+        applyButtonConfig(button, item);
     }
+}
+
+function applyButtonConfig(button, config) {
+    const tooltip = config.tooltip ?? config.label;
+
+    if (config.icon) {
+        button.innerHTML = `<svg viewBox="0 0 24 24"><path d="${config.icon}"></path></svg>`;
+    } else if (config.label) {
+        button.textContent = config.label;
+    }
+
+    if (tooltip) button.title = getShortcutTitle(tooltip, config.shortcut, config.shift);
 }
 
 function buildTagButtons() {
@@ -310,13 +318,7 @@ function buildTagButtons() {
         const button = document.createElement("button");
         button.type = "button";
         button.className = container.className;
-        button.title = getShortcutTitle(buttonConfig.tooltip ?? buttonConfig.label, buttonConfig.shortcut);
-
-        if (buttonConfig.icon) {
-            button.innerHTML = `<svg viewBox="0 0 24 24"><path d="${buttonConfig.icon}"></path></svg>`;
-        } else {
-            button.textContent = buttonConfig.label;
-        }
+        applyButtonConfig(button, buttonConfig);
 
         container.element.appendChild(button);
         tagButtons.push({ button, tagValue: tagConfig.values[0] });
