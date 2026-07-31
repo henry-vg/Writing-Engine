@@ -1,23 +1,45 @@
 function handleWindowBlur() {
-    closeAllMenuDropdowns();
+    closeAllMenus();
+}
+
+function handleWindowBeforeUnload(e) {
+    if (!needsSaving) return;
+
+    e.preventDefault();
 }
 
 function handleDocumentClick() {
-    closeAllMenuDropdowns();
+    closeAllMenus();
 }
 
 function handleDocumentKeyDown(e) {
     if (e.key == "Escape") {
-        closeAllMenuDropdowns();
+        closeAllMenus();
+
+        if (!confirmDialogWrapper.hidden) {
+            closeConfirmDialog("cancel");
+            return;
+        }
     }
 
-    if (document.activeElement !== editorInput) return;
+    if (!confirmDialogWrapper.hidden) return;
 
     const ctrlOrCmd = e.ctrlKey || e.metaKey;
 
     if (!ctrlOrCmd) return;
 
-    const tagConfig = getTagConfigByShortcut(e.key.toLowerCase());
+    const key = e.key.toLowerCase();
+    const menuShortcut = getMenuShortcut(key, e.shiftKey);
+
+    if (menuShortcut) {
+        e.preventDefault();
+        menuShortcut.button.click();
+        return;
+    }
+
+    if (document.activeElement !== editorInput) return;
+
+    const tagConfig = getTagConfigByShortcut(key);
 
     if (!tagConfig) return;
 
@@ -26,12 +48,12 @@ function handleDocumentKeyDown(e) {
 }
 
 function handleDocumentSelectionChange() {
-    if (document.activeElement === editorInput) computeText();
+    if (document.activeElement === editorInput) refreshHighlight();
 }
 
 function handleEditorInputInput() {
     computeText();
-    computeTemplate();
+    computeTemplateSoon();
 }
 
 function handleEditorInputDoubleClick() {
@@ -49,13 +71,56 @@ function handleEditorInputDoubleClick() {
     });
 }
 
+function handleEditorInputContextMenu(e) {
+    e.preventDefault();
+    openEditorContextMenu(e.clientX, e.clientY);
+}
+
 function handleEditorInputScroll() {
     editorHighlight.scrollTop = editorInput.scrollTop;
     editorHighlight.scrollLeft = editorInput.scrollLeft;
 }
 
 function handleFormattingButtonClick(tagValue) {
+    const tagConfig = getTagConfig(tagValue);
+    if (!tagConfig) return;
 
+    editorInput.focus();
+
+    const metadataLength = editorMetadata?.rawLength ?? 0;
+    const selectionStart = editorInput.selectionStart;
+    const selectionEnd = editorInput.selectionEnd;
+
+    if (selectionStart < metadataLength) return;
+
+    const body = getEditorBody(editorInput.value, editorMetadata);
+    const pairs = getTagPairsForKey(body, tagConfig.key, metadataLength);
+
+    const selectedPair = pairs.find((pair) => isTagPairSelected(pair, selectionStart, selectionEnd));
+    if (selectedPair) {
+        removeEditorTagPair(selectedPair);
+        return;
+    }
+
+    if (selectionStart !== selectionEnd) {
+        wrapEditorRange(selectionStart, selectionEnd, tagValue);
+        return;
+    }
+
+    const word = getWordAt(editorInput.value, selectionStart);
+    if (word) {
+        const wordPair = pairs.find((pair) => pair.contentStart === word.start && pair.end === word.end);
+
+        if (wordPair) {
+            removeEditorTagPair(wordPair);
+            return;
+        }
+
+        wrapEditorRange(word.start, word.end, tagValue);
+        return;
+    }
+
+    wrapEditorRange(selectionStart, selectionStart, tagValue);
 }
 
 function handleToggleThemeButtonClick() {
@@ -66,13 +131,19 @@ function handleToggleThemeButtonClick() {
 }
 
 function handleToggleSpellcheckButtonClick() {
-    editorInput.spellcheck = !editorInput.spellcheck;
+    const enabled = !editorInput.spellcheck;
+    loadSpellcheck(enabled);
+    dbSet(DBSpellcheckKey, enabled);
 }
 
 function handleTogglePreviewButtonClick() {
-    preview.toggleAttribute("hidden", !preview.hidden);
-    togglePreviewNegativeButton.toggleAttribute("disabled", preview.hidden);
-    exportToPDFButton.toggleAttribute("disabled", preview.hidden);
+    const visible = preview.hidden;
+    loadPreviewVisible(visible);
+    dbSet(DBPreviewVisibleKey, visible);
+}
+
+function handlePreviewLoad() {
+    preview.contentWindow.scrollTo(previewScroll.x, previewScroll.y);
 }
 
 function handleTogglePreviewNegativeButtonClick() {
@@ -84,26 +155,25 @@ function handleTogglePreviewNegativeButtonClick() {
 function handleEditMetadataButtonClick() {
     editorInput.focus();
 
-    const value = editorInput.value;
-    const newline = value.includes("\r\n") ? "\r\n" : "\n";
+    const existingKeys = editorMetadata ? Object.keys(editorMetadata.parsed) : [];
+    const missingKeys = getTemplateMetadataKeys().filter((key) => !existingKeys.includes(key));
+    const lines = missingKeys.map((key) => `${key}: `).join("\n");
 
     if (!editorMetadata) {
-        const block = `---${newline}${newline}---${newline}`;
-
-        editorInput.value = block + value;
-
-        const caret = (`---${newline}`).length;
-        editorInput.setSelectionRange(caret, caret);
-
-        editorInput.scrollTop = 0;
-        editorHighlight.scrollTop = 0;
-        computeText();
+        replaceEditorRange(0, 0, `---\n${lines}\n---\n`);
+        moveCaretToMetadataValue("---\n".length, missingKeys[0]);
         return;
     }
-    editorInput.setSelectionRange(3 + newline.length, 3 + newline.length);
-    editorInput.scrollTop = 0;
-    editorHighlight.scrollTop = 0;
-    computeText();
+
+    if (missingKeys.length) {
+        const insertAt = editorMetadata.rawLength - "---".length;
+
+        replaceEditorRange(insertAt, insertAt, `${lines}\n`);
+        moveCaretToMetadataValue(insertAt, missingKeys[0]);
+        return;
+    }
+
+    moveCaretToMetadataValue("---\n".length, null);
 }
 
 function handleMenuDropdownButtonClick(e, dropdown) {
@@ -113,50 +183,68 @@ function handleMenuDropdownButtonClick(e, dropdown) {
     dropdown.toggleAttribute("hidden", !mustOpen);
 }
 
-function handleNewTextButtonClick() {
+async function handleNewTextButtonClick() {
+    if (!await confirmDiscardChanges()) return;
+    if (!await pickTextFileToSave()) return;
 
+    loadTextFile(textFileHandle.name, "");
+    await saveTextFile();
 }
 
 async function handleOpenTextButtonClick() {
-    const file = await openFile(".txt, .md");
+    if (!await confirmDiscardChanges()) return;
 
-    if (!file) return;
+    const handle = await pickFileToOpen(textFileTypes);
 
-    const name = file.name;
-    const content = await file.text();
-    await dbSet(DBTextKey, { name: name, content });
+    if (!handle) return;
 
-    loadTextFile(name, content);
+    const content = await (await handle.getFile()).text();
+
+    textFileHandle = handle;
+    await dbSet(DBTextHandleKey, handle);
+    await dbSet(DBTextKey, { name: handle.name, content });
+
+    loadTextFile(handle.name, content);
 }
 
-function handleSaveTextButtonClick() {
+async function handleSaveTextButtonClick() {
+    if (!textFileHandle && !await pickTextFileToSave()) return;
 
+    await saveTextFile();
 }
 
-function handleSaveTextAsButtonClick() {
+async function handleSaveTextAsButtonClick() {
+    if (!await pickTextFileToSave()) return;
 
+    await saveTextFile();
 }
 
 async function handleCloseTextButtonClick() {
-    // are you sure?
+    const confirmed = needsSaving
+        ? await confirmDiscardChanges()
+        : await confirmAction(`Close ${textFilePath.textContent}?`);
+
+    if (!confirmed) return;
+
     await dbDelete(DBTextKey);
+    await dbDelete(DBTextHandleKey);
     closeTextFile();
 }
 
 async function handleOpenTemplateButtonClick() {
-    const file = await openFile(".html, .htm, text/html");
+    const handle = await pickFileToOpen(templateFileTypes);
 
-    if (!file) return;
+    if (!handle) return;
 
-    const name = file.name;
-    const content = await file.text();
-    await dbSet(DBTemplateKey, { name: name, content });
+    const content = await (await handle.getFile()).text();
+    await dbSet(DBTemplateKey, { name: handle.name, content });
 
-    loadTemplateFile(name, content);
+    loadTemplateFile(handle.name, content);
 }
 
 async function handleCloseTemplateButtonClick() {
-    // are you sure?
+    if (!await confirmAction(`Close ${templateFilePath.textContent}?`)) return;
+
     await dbDelete(DBTemplateKey);
     closeTemplateFile();
 }

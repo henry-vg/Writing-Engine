@@ -12,13 +12,21 @@ const optionsDropdown = document.getElementById("options-dropdown");
 
 const helpDialogWrapper = document.getElementById("help-dialog-wrapper");
 
+const confirmDialogWrapper = document.getElementById("confirm-dialog-wrapper");
+const confirmDialogMessage = document.getElementById("confirmDialogMessage");
+const confirmSaveButton = document.getElementById("confirm-save-button");
+const confirmProceedButton = document.getElementById("confirm-proceed-button");
+const confirmCancelButton = document.getElementById("confirm-cancel-button");
+
 const toggleThemeButton = document.getElementById("toggle-theme-button");
 const toggleSpellcheckButton = document.getElementById("toggle-spellcheck-button");
 const togglePreviewButton = document.getElementById("toggle-preview-button");
 const togglePreviewNegativeButton = document.getElementById("toggle-preview-negative-button");
 
+const editorContextMenu = document.getElementById("editorContextMenu");
+const contextMenuTagButtons = document.getElementById("contextMenuTagButtons");
+
 const titlesButton = document.getElementById("titles-button");
-const toolbarTagButtons = document.getElementById("toolbarTagButtons");
 
 const editMetadataButton = document.getElementById("edit-metadata-button");
 

@@ -31,8 +31,20 @@
 </head>
 
 <body>
-    <div class="help-dialog-wrapper" id="help-dialog-wrapper" hidden>
-        <div class="help-dialog">
+    <div class="dialog-wrapper" id="confirm-dialog-wrapper" hidden>
+        <div class="dialog confirm-dialog">
+            <p class="confirm-dialog-message" id="confirmDialogMessage"></p>
+
+            <div class="confirm-dialog-buttons">
+                <button class="menu-item" type="button" id="confirm-save-button">Save</button>
+                <button class="menu-item" type="button" id="confirm-proceed-button">Don't Save</button>
+                <button class="menu-item" type="button" id="confirm-cancel-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="dialog-wrapper" id="help-dialog-wrapper" hidden>
+        <div class="dialog help-dialog">
             <button class="button" type="button" title="Close" id="help-close-button">
                 <svg viewBox="0 0 24 24">
                     <path
@@ -53,6 +65,31 @@
         </div>
     </div>
 
+    <div class="editor-context-menu" id="editorContextMenu" hidden>
+        <div class="menu">
+            <button class="button" type="button" title="Titles" id="titles-button">
+                <svg viewBox="0 0 24 24">
+                    <path d="M5 4v3h5.5v12h3V7H19V4z">
+                    </path>
+                </svg>
+            </button>
+
+            <div class="menu-dropdown" id="titles-dropdown" hidden></div>
+        </div>
+
+        <span class="context-menu-tag-buttons" id="contextMenuTagButtons"></span>
+
+        <span class="divider"></span>
+
+        <button class="button" type="button" title="Edit Metadata" id="edit-metadata-button">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M4 7v2c0 .55-.45 1-1 1H2v4h1c.55 0 1 .45 1 1v2c0 1.65 1.35 3 3 3h3v-2H7c-.55 0-1-.45-1-1v-2c0-1.3-.84-2.42-2-2.83v-.34C5.16 11.42 6 10.3 6 9V7c0-.55.45-1 1-1h3V4H7C5.35 4 4 5.35 4 7m17 3c-.55 0-1-.45-1-1V7c0-1.65-1.35-3-3-3h-3v2h3c.55 0 1 .45 1 1v2c0 1.3.84 2.42 2 2.83v.34c-1.16.41-2 1.52-2 2.83v2c0 .55-.45 1-1 1h-3v2h3c1.65 0 3-1.35 3-3v-2c0-.55.45-1 1-1h1v-4z">
+                </path>
+            </svg>
+        </button>
+    </div>
+
     <main class="main-wrapper">
         <header class="toolbar">
 
@@ -68,20 +105,12 @@
                 </div>
             </div>
 
-            <span class="toolbar__divider"></span>
+            <span class="divider"></span>
 
             <button class="button" type="button" title="Toggle Theme" id="toggle-theme-button">
                 <svg viewBox="0 0 24 24">
                     <path
                         d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10m1-17.93c3.94.49 7 3.85 7 7.93s-3.05 7.44-7 7.93z">
-                    </path>
-                </svg>
-            </button>
-
-            <button class="button" type="button" title="Toggle Spellcheck" id="toggle-spellcheck-button">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M12.45 16h2.09L9.43 3H7.57L2.46 16h2.09l1.12-3h5.64zm-6.02-5L8.5 5.48 10.57 11zm15.16.59-8.09 8.09L9.83 16l-1.41 1.41 5.09 5.09L23 13z">
                     </path>
                 </svg>
             </button>
@@ -101,32 +130,7 @@
 
                 </svg>
             </button>
-            <span class="toolbar__divider"></span>
-
-            <div class="menu">
-                <button class="button" type="button" title="Titles" id="titles-button">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M5 4v3h5.5v12h3V7H19V4z">
-                        </path>
-                    </svg>
-                </button>
-
-                <div class="menu-dropdown" id="titles-dropdown" hidden></div>
-            </div>
-
-            <span class="toolbar-tag-buttons" id="toolbarTagButtons"></span>
-
-            <span class="toolbar__divider"></span>
-
-            <button class="button" type="button" title="Edit Metadata" id="edit-metadata-button">
-                <svg viewBox="0 0 24 24">
-                    <path
-                        d="M4 7v2c0 .55-.45 1-1 1H2v4h1c.55 0 1 .45 1 1v2c0 1.65 1.35 3 3 3h3v-2H7c-.55 0-1-.45-1-1v-2c0-1.3-.84-2.42-2-2.83v-.34C5.16 11.42 6 10.3 6 9V7c0-.55.45-1 1-1h3V4H7C5.35 4 4 5.35 4 7m17 3c-.55 0-1-.45-1-1V7c0-1.65-1.35-3-3-3h-3v2h3c.55 0 1 .45 1 1v2c0 1.3.84 2.42 2 2.83v.34c-1.16.41-2 1.52-2 2.83v2c0 .55-.45 1-1 1h-3v2h3c1.65 0 3-1.35 3-3v-2c0-.55.45-1 1-1h1v-4z">
-                    </path>
-                </svg>
-            </button>
-
-            <span class="toolbar__divider"></span>
+            <span class="divider"></span>
 
             <div class="menu">
                 <button class="button" type="button" title="Options" id="options-button">
@@ -136,14 +140,13 @@
                 </button>
 
                 <div class="menu-dropdown" id="options-dropdown" hidden>
-                    <button class="menu-item" type="button" title="New Text (Ctrl+N)" id="new-text-button">New
+                    <button class="menu-item" type="button" title="New Text" id="new-text-button">New
                         Text...</button>
-                    <button class="menu-item" type="button" title="Open Text (Ctrl+O)" id="open-text-button">Open
+                    <button class="menu-item" type="button" id="open-text-button">Open
                         Text...</button>
-                    <button class="menu-item" type="button" title="Save Text (Ctrl+S)" id="save-text-button">Save
+                    <button class="menu-item" type="button" id="save-text-button">Save
                         Text</button>
-                    <button class="menu-item" type="button" title="Save Text As (Ctrl+Shift+S)"
-                        id="save-text-as-button">Save Text As...</button>
+                    <button class="menu-item" type="button" id="save-text-as-button">Save Text As...</button>
                     <button class="menu-item" type="button" title="Close Text" id="close-text-button">Close
                         Text</button>
 
@@ -158,6 +161,11 @@
 
                     <button class="menu-item" type="button" title="Export To PDF" id="export-to-pdf-button">Export To
                         PDF...</button>
+
+                    <span class="dropdown__divider"></span>
+
+                    <button class="menu-item" type="button" title="Toggle Spellcheck"
+                        id="toggle-spellcheck-button"></button>
 
                     <span class="dropdown__divider"></span>
 

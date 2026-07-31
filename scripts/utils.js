@@ -11,22 +11,48 @@ function normalizeLineBreaks(text) {
     return text.replaceAll("\r\n", "\n");
 }
 
-async function openFile(accept) {
-    return await new Promise((resolve) => {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = accept;
-        input.addEventListener("change", () => resolve(input.files?.[0] ?? null), { once: true });
-        input.addEventListener("cancel", () => resolve(null), { once: true });
-        input.click();
-    });
+async function pickFileToOpen(types) {
+    try {
+        const [handle] = await window.showOpenFilePicker({ types });
+        return handle;
+    } catch (error) {
+        if (error.name !== "AbortError") console.warn("showOpenFilePicker failed:", error);
+        return null;
+    }
+}
+
+async function pickFileToSave(suggestedName, types) {
+    try {
+        return await window.showSaveFilePicker({ suggestedName, types });
+    } catch (error) {
+        if (error.name !== "AbortError") console.warn("showSaveFilePicker failed:", error);
+        return null;
+    }
+}
+
+async function writeFile(handle, content) {
+    try {
+        const writable = await handle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        return true;
+    } catch (error) {
+        console.warn(`writeFile("${handle.name}") failed:`, error);
+        return false;
+    }
+}
+
+async function hasWritePermission(handle) {
+    const options = { mode: "readwrite" };
+
+    if (await handle.queryPermission(options) === "granted") return true;
+
+    return await handle.requestPermission(options) === "granted";
 }
 
 function setTemplateButtonsEnabled(enabled) {
     closeTemplateButton.toggleAttribute("disabled", !enabled);
     togglePreviewButton.toggleAttribute("disabled", !enabled);
-    togglePreviewNegativeButton.toggleAttribute("disabled", !enabled);
-    exportToPDFButton.toggleAttribute("disabled", !enabled);
 }
 
 function loadTemplateFile(name, content) {
@@ -34,13 +60,12 @@ function loadTemplateFile(name, content) {
 
     if (!content) {
         templateContent = null;
-        preview.toggleAttribute("hidden", true);
         setTemplateButtonsEnabled(false);
-        return
+        loadPreviewVisible(previewVisible);
+        return;
     }
 
     content = normalizeLineBreaks(content);
-    preview.toggleAttribute("hidden", false);
     setTemplateButtonsEnabled(true);
 
     const appCss = previewScrollbarStyle.textContent;
@@ -59,28 +84,27 @@ function loadTemplateFile(name, content) {
     });
 
     templateContent = withScrollBar;
+    loadPreviewVisible(previewVisible);
     computeTemplate();
 }
 
 function closeTemplateFile() {
-    preview.toggleAttribute("hidden", true);
-    setTemplateButtonsEnabled(false);
     templateFilePath.textContent = noTemplateFileMessage;
     templateContent = null;
+    setTemplateButtonsEnabled(false);
+    loadPreviewVisible(previewVisible);
     computeTemplate();
 }
 
 function loadTextFile(name, content) {
-    textFilePath.textContent = name;
-    if (content) {
+    if (content !== null) {
         content = normalizeLineBreaks(content);
-        closeTextButton.toggleAttribute("disabled", false);
     }
-    else {
-        closeTextButton.toggleAttribute("disabled", true);
-    }
-    editorInput.value = content;
-    textContent = content;
+
+    textFilePath.textContent = name;
+    closeTextButton.toggleAttribute("disabled", content === null);
+    editorInput.value = content ?? "";
+    textContent = content || null;
     computeText();
     computeTemplate();
 }
@@ -90,8 +114,35 @@ function closeTextFile() {
     textFilePath.textContent = noTextFileMessage;
     editorInput.value = "";
     textContent = null;
+    textFileHandle = null;
     computeText();
     computeTemplate();
+}
+
+async function saveTextFile() {
+    if (!await hasWritePermission(textFileHandle)) return false;
+
+    const content = editorInput.value;
+
+    if (!await writeFile(textFileHandle, content)) return false;
+
+    await dbSet(DBTextKey, { name: textFileHandle.name, content });
+
+    textFilePath.textContent = textFileHandle.name;
+    closeTextButton.toggleAttribute("disabled", false);
+    textContent = content || null;
+    computeText();
+    return true;
+}
+
+async function pickTextFileToSave() {
+    const handle = await pickFileToSave(textFileHandle?.name ?? defaultTextFileName, textFileTypes);
+
+    if (!handle) return false;
+
+    textFileHandle = handle;
+    await dbSet(DBTextHandleKey, handle);
+    return true;
 }
 
 function loadTheme(theme) {
@@ -102,18 +153,94 @@ function loadPreviewNegative(negative) {
     preview.toggleAttribute("negative", negative);
 }
 
+function loadPreviewVisible(visible) {
+    previewVisible = visible;
+
+    const shown = visible && templateContent !== null;
+
+    preview.toggleAttribute("hidden", !shown);
+    togglePreviewNegativeButton.toggleAttribute("disabled", !shown);
+    exportToPDFButton.toggleAttribute("disabled", !shown);
+}
+
+function loadSpellcheck(enabled) {
+    editorInput.spellcheck = enabled;
+    toggleSpellcheckButton.textContent = enabled ? disableSpellcheckMessage : enableSpellcheckMessage;
+}
+
 function closeAllMenuDropdowns() {
     for (const { dropdown } of menuElements) {
         dropdown.toggleAttribute("hidden", true);
     }
 }
 
-function getTagButtonTitle(buttonConfig) {
-    if (!buttonConfig.shortcut) {
-        return buttonConfig.label;
-    }
+function closeAllMenus() {
+    closeAllMenuDropdowns();
+    editorContextMenu.toggleAttribute("hidden", true);
+}
 
-    return `${buttonConfig.label} (Ctrl+${buttonConfig.shortcut.toUpperCase()})`;
+function openConfirmDialog(message, saveLabel, proceedLabel) {
+    confirmDialogMessage.textContent = message;
+    confirmSaveButton.textContent = saveLabel ?? "";
+    confirmSaveButton.toggleAttribute("hidden", !saveLabel);
+    confirmProceedButton.textContent = proceedLabel;
+    confirmDialogWrapper.toggleAttribute("hidden", false);
+    confirmCancelButton.focus();
+
+    return new Promise((resolve) => {
+        confirmDialogResolve = resolve;
+    });
+}
+
+function closeConfirmDialog(answer) {
+    confirmDialogWrapper.toggleAttribute("hidden", true);
+    confirmDialogResolve?.(answer);
+    confirmDialogResolve = null;
+}
+
+function askToSaveChanges(name) {
+    return openConfirmDialog(`Save changes to ${name} before closing?`, "Save", "Don't Save");
+}
+
+async function confirmAction(message) {
+    return await openConfirmDialog(message, null, "OK") === "proceed";
+}
+
+async function confirmDiscardChanges() {
+    if (!needsSaving) return true;
+
+    const answer = await askToSaveChanges(textFilePath.textContent);
+
+    if (answer === "cancel") return false;
+
+    if (answer === "proceed") return true;
+
+    if (!textFileHandle && !await pickTextFileToSave()) return false;
+
+    return await saveTextFile();
+}
+
+function openEditorContextMenu(x, y) {
+    closeAllMenuDropdowns();
+    editorContextMenu.toggleAttribute("hidden", false);
+
+    const left = Math.min(x, window.innerWidth - editorContextMenu.offsetWidth);
+    const top = y - editorContextMenu.offsetHeight;
+
+    editorContextMenu.style.left = `${Math.max(0, left)}px`;
+    editorContextMenu.style.top = `${Math.max(0, top)}px`;
+}
+
+function getShortcutTitle(label, shortcut, shift) {
+    if (!shortcut) return label;
+
+    const modifiers = shift ? "Ctrl+Shift" : "Ctrl";
+
+    return `${label} (${modifiers}+${shortcut.toUpperCase()})`;
+}
+
+function getMenuShortcut(key, shift) {
+    return menuShortcuts.find((item) => item.shortcut === key && !!item.shift === shift) ?? null;
 }
 
 function buildTagButtons() {
@@ -121,19 +248,15 @@ function buildTagButtons() {
 
     for (const tagConfig of Object.values(tags)) {
         const buttonConfig = tagConfig.button;
-        if (!buttonConfig) {
-            continue;
-        }
+        if (!buttonConfig) continue;
 
         const container = tagButtonContainers[buttonConfig.container];
-        if (!container) {
-            continue;
-        }
+        if (!container) continue;
 
         const button = document.createElement("button");
         button.type = "button";
         button.className = container.className;
-        button.title = getTagButtonTitle(buttonConfig);
+        button.title = getShortcutTitle(buttonConfig.label, buttonConfig.shortcut);
 
         if (buttonConfig.icon) {
             button.innerHTML = `<svg viewBox="0 0 24 24"><path d="${buttonConfig.icon}"></path></svg>`;
@@ -150,9 +273,7 @@ function buildTagButtons() {
 
 function parseMetadataLine(line) {
     const match = line.match(/^([^:\n]+):(.*)$/);
-    if (!match) {
-        return null;
-    }
+    if (!match) return null;
 
     return {
         key: match[1].trim(),
@@ -210,9 +331,7 @@ function getEditorBody(value, metadata) {
 
 function getTagConfig(tagValue) {
     for (const [key, tagConfig] of Object.entries(tags)) {
-        if (!tagConfig.values.includes(tagValue)) {
-            continue;
-        }
+        if (!tagConfig.values.includes(tagValue)) continue;
 
         return {
             key,
@@ -225,33 +344,40 @@ function getTagConfig(tagValue) {
 
 function getTagConfigByShortcut(shortcut) {
     for (const tagConfig of Object.values(tags)) {
-        if (tagConfig.button?.shortcut === shortcut) {
-            return tagConfig;
-        }
+        if (tagConfig.button?.shortcut === shortcut) return tagConfig;
     }
 
     return null;
 }
 
+function isSyntaxCharacter(character) {
+    return character === tagSyntax.open
+        || character === tagSyntax.close
+        || character === tagSyntax.escape;
+}
+
+function getEscapeAt(value, index) {
+    if (value[index] !== tagSyntax.escape || !isSyntaxCharacter(value[index + 1])) return null;
+
+    return {
+        value: value[index + 1],
+        raw: value.slice(index, index + 2),
+    };
+}
+
 function getTagOpen(value, index) {
-    if (value[index] !== "{") {
-        return null;
-    }
+    if (value[index] !== tagSyntax.open) return null;
 
     let end = index + 1;
     while (end < value.length && /[a-zA-Z0-9]/.test(value[end])) {
         end++;
     }
 
-    if (end === index + 1 || value[end] !== " ") {
-        return null;
-    }
+    if (end === index + 1 || value[end] !== tagSyntax.separator) return null;
 
     const tagValue = value.slice(index + 1, end);
     const tagConfig = getTagConfig(tagValue);
-    if (!tagConfig) {
-        return null;
-    }
+    if (!tagConfig) return null;
 
     return {
         ...tagConfig,
@@ -266,6 +392,12 @@ function getTagPairs(value) {
     const stack = [];
 
     for (let i = 0; i < value.length; i++) {
+        const escaped = getEscapeAt(value, i);
+        if (escaped) {
+            i += escaped.raw.length - 1;
+            continue;
+        }
+
         const tagOpen = getTagOpen(value, i);
         if (tagOpen) {
             stack.push(i);
@@ -273,7 +405,7 @@ function getTagPairs(value) {
             continue;
         }
 
-        if (value[i] === "}") {
+        if (value[i] === tagSyntax.close) {
             const start = stack.pop();
             if (start != null) {
                 pairs.set(start, i);
@@ -284,21 +416,107 @@ function getTagPairs(value) {
     return pairs;
 }
 
-function getClassAttribute(classes) {
-    if (!Array.isArray(classes) || !classes.length) {
-        return "";
+function getTagPairsForKey(value, key, offset) {
+    const pairs = [];
+
+    for (const [start, end] of getTagPairs(value)) {
+        const tagOpen = getTagOpen(value, start);
+        if (tagOpen.key !== key) continue;
+
+        pairs.push({
+            start: offset + start,
+            end: offset + end,
+            contentStart: offset + tagOpen.contentStart,
+        });
     }
+
+    return pairs;
+}
+
+function isTagPairSelected(pair, selectionStart, selectionEnd) {
+    const wholeTag = pair.start === selectionStart && pair.end + 1 === selectionEnd;
+    const onlyContent = pair.contentStart === selectionStart && pair.end === selectionEnd;
+
+    return wholeTag || onlyContent;
+}
+
+function isWordCharacter(character) {
+    return character != null && /[\p{L}\p{N}]/u.test(character);
+}
+
+function getWordAt(value, index) {
+    if (!isWordCharacter(value[index - 1]) || !isWordCharacter(value[index])) return null;
+
+    let start = index;
+    let end = index;
+
+    while (start > 0 && isWordCharacter(value[start - 1])) start--;
+    while (end < value.length && isWordCharacter(value[end])) end++;
+
+    return { start, end };
+}
+
+function replaceEditorRange(start, end, text) {
+    editorInput.focus();
+    editorInput.setSelectionRange(start, end);
+
+    if (document.execCommand("insertText", false, text)) {
+        return;
+    }
+
+    const value = editorInput.value;
+    editorInput.value = value.slice(0, start) + text + value.slice(end);
+    computeText();
+    computeTemplate();
+}
+
+function wrapEditorRange(start, end, tagValue) {
+    const tagOpen = tagSyntax.open + tagValue + tagSyntax.separator;
+    const content = editorInput.value.slice(start, end);
+    const contentStart = start + tagOpen.length;
+
+    replaceEditorRange(start, end, tagOpen + content + tagSyntax.close);
+    editorInput.setSelectionRange(contentStart, contentStart + content.length);
+    computeText();
+}
+
+function moveCaretToMetadataValue(lineStart, key) {
+    const caret = lineStart + (key ? `${key}: `.length : 0);
+
+    editorInput.setSelectionRange(caret, caret);
+    editorInput.scrollTop = 0;
+    editorHighlight.scrollTop = 0;
+    computeText();
+}
+
+function removeEditorTagPair(pair) {
+    const content = editorInput.value.slice(pair.contentStart, pair.end);
+
+    replaceEditorRange(pair.start, pair.end + 1, content);
+    editorInput.setSelectionRange(pair.start, pair.start + content.length);
+    computeText();
+}
+
+function getClassAttribute(classes) {
+    if (!Array.isArray(classes) || !classes.length) return "";
 
     return ` class="${escapeHtml(classes.join(" "))}"`;
 }
 
+function getTemplateMetadataKeys() {
+    if (!templateContent) return [];
+
+    const placeholders = templateContent.match(/\$[a-zA-Z][\w-]*\$/g) ?? [];
+    const keys = placeholders.map((placeholder) => placeholder.slice(1, -1));
+
+    return [...new Set(keys)].filter((key) => key !== templateBodyKey);
+}
+
 function applyMetadataToTemplate(value) {
-    if (!editorMetadata) {
-        return value;
-    }
+    if (!editorMetadata) return value;
 
     for (const [key, metadataValue] of Object.entries(editorMetadata.parsed)) {
-        value = value.replaceAll(`$${key}$`, metadataValue);
+        value = value.replaceAll(`$${key}$`, escapeHtml(metadataValue));
     }
 
     return value;
@@ -315,25 +533,19 @@ function renderBodyHtml(value) {
     let openLineName = null;
 
     function isLineWrappingEnabled() {
-        if (!stack.length) {
-            return true;
-        }
+        if (!stack.length) return true;
 
         return stack.every((item) => item.contentLineWrapping);
     }
 
     function getLineWrapping() {
-        if (!stack.length) {
-            return defaultLineWrapping;
-        }
+        if (!stack.length) return defaultLineWrapping;
 
         return stack[stack.length - 1].contentLineWrapping;
     }
 
     function openLine() {
-        if (!isLineWrappingEnabled() || openLineName) {
-            return;
-        }
+        if (!isLineWrappingEnabled() || openLineName) return;
 
         const lineWrapping = getLineWrapping();
 
@@ -348,9 +560,7 @@ function renderBodyHtml(value) {
     }
 
     function closeLine() {
-        if (!openLineName) {
-            return;
-        }
+        if (!openLineName) return;
 
         for (let i = stack.length - 1; i >= 0; i--) {
             if (!stack[i].isBlock) {
@@ -363,22 +573,16 @@ function renderBodyHtml(value) {
     }
 
     function emitText(text) {
-        if (!text) {
-            return;
-        }
+        if (!text) return;
 
         if (!isLineWrappingEnabled()) {
-            if (!/\S/.test(text)) {
-                return;
-            }
+            if (!/\S/.test(text)) return;
 
             out.push(escapeHtml(text));
             return;
         }
 
-        if (!openLineName && !/\S/.test(text)) {
-            return;
-        }
+        if (!openLineName && !/\S/.test(text)) return;
 
         openLine();
         out.push(escapeHtml(text));
@@ -415,7 +619,7 @@ function renderBodyHtml(value) {
 
     function closeTag() {
         if (!stack.length) {
-            emitText("}");
+            emitText(tagSyntax.close);
             return;
         }
 
@@ -434,6 +638,13 @@ function renderBodyHtml(value) {
         if (value[i] === "\n") {
             closeLine();
             i++;
+            continue;
+        }
+
+        const escaped = getEscapeAt(value, i);
+        if (escaped) {
+            emitText(escaped.value);
+            i += escaped.raw.length;
             continue;
         }
 
@@ -458,19 +669,23 @@ function renderBodyHtml(value) {
         }
 
         if (tagOpen) {
-            emitText("{");
+            emitText(tagSyntax.open);
             i++;
             continue;
         }
 
-        if (value[i] === "}") {
+        if (value[i] === tagSyntax.close) {
             closeTag();
             i++;
             continue;
         }
 
         let start = i;
-        while (i < value.length && value[i] !== "\n" && value[i] !== "}" && !getTagOpen(value, i)) {
+        while (i < value.length
+            && value[i] !== "\n"
+            && value[i] !== tagSyntax.close
+            && !getTagOpen(value, i)
+            && !getEscapeAt(value, i)) {
             i++;
         }
 
@@ -492,6 +707,66 @@ function renderBodyHtml(value) {
     return out.join("");
 }
 
+function getCaretPosition() {
+    return editorInput.selectionDirection === "backward"
+        ? editorInput.selectionStart
+        : editorInput.selectionEnd;
+}
+
+function getHighlightWindow(length, center) {
+    if (length <= highlightWindowSize) {
+        return { start: 0, end: length, step: 0 };
+    }
+
+    const step = Math.round(center / highlightWindowStep);
+    const quantizedCenter = step * highlightWindowStep;
+    const half = highlightWindowSize / 2;
+
+    return {
+        start: Math.max(0, quantizedCenter - half),
+        end: Math.min(length, quantizedCenter + half),
+        step,
+    };
+}
+
+function getHighlightCenter(caretPosition) {
+    return caretPosition - (editorMetadata?.rawLength ?? 0);
+}
+
+function getActiveTagRange(caretPosition) {
+    const offset = editorMetadata?.rawLength ?? 0;
+    let innermost = null;
+
+    for (const [start, end] of editorTagPairs) {
+        if (caretPosition <= offset + start || caretPosition > offset + end) {
+            continue;
+        }
+
+        if (!innermost || start > innermost.start) {
+            innermost = { start, end };
+        }
+    }
+
+    return innermost ? `${innermost.start}-${innermost.end}` : "none";
+}
+
+function getHighlightState(caretPosition, highlightWindow) {
+    const metadataActive = editorMetadata !== null && caretPosition <= editorMetadata.rawLength;
+
+    return `${metadataActive}|${getActiveTagRange(caretPosition)}|${highlightWindow.step}`;
+}
+
+function renderHighlight(caretPosition, highlightWindow) {
+    let highlighted = "";
+
+    if (editorMetadata) {
+        highlighted += highlightMetadata(caretPosition);
+    }
+
+    highlighted += highlightTags(caretPosition, highlightWindow);
+    editorHighlight.innerHTML = highlighted;
+}
+
 function computeText() {
     editorContent = editorInput.value || null;
 
@@ -501,29 +776,36 @@ function computeText() {
     if (!editorContent) {
         editorBody = null;
         editorMetadata = null;
+        editorTagPairs = new Map();
+        lastHighlightState = null;
         editorHighlight.innerHTML = "";
-        return
+        return;
     }
-
-    const caretPosition = editorInput.selectionDirection === "backward"
-        ? editorInput.selectionStart
-        : editorInput.selectionEnd;
 
     const metadata = parseMetadata(editorContent);
 
     editorMetadata = metadata;
+    editorBody = metadata ? getEditorBody(editorContent, metadata) : editorContent;
+    editorTagPairs = getTagPairs(editorBody);
 
-    let highlighted = "";
-    let contentWithoutMetadata = editorContent;
-    if (metadata) {
-        contentWithoutMetadata = getEditorBody(editorContent, metadata);
-        highlighted += highlightMetadata(caretPosition);
-    }
+    const caretPosition = getCaretPosition();
+    const highlightWindow = getHighlightWindow(editorBody.length, getHighlightCenter(caretPosition));
 
-    editorBody = contentWithoutMetadata;
-    highlighted += highlightTags(caretPosition);
+    lastHighlightState = getHighlightState(caretPosition, highlightWindow);
+    renderHighlight(caretPosition, highlightWindow);
+}
 
-    editorHighlight.innerHTML = highlighted;
+function refreshHighlight() {
+    if (!editorContent) return;
+
+    const caretPosition = getCaretPosition();
+    const highlightWindow = getHighlightWindow(editorBody.length, getHighlightCenter(caretPosition));
+    const state = getHighlightState(caretPosition, highlightWindow);
+
+    if (state === lastHighlightState) return;
+
+    lastHighlightState = state;
+    renderHighlight(caretPosition, highlightWindow);
 }
 
 function highlightMetadata(caretPosition) {
@@ -565,16 +847,24 @@ function highlightMetadata(caretPosition) {
     return html;
 }
 
-function highlightTags(caretPosition) {
+function highlightTags(caretPosition, highlightWindow) {
     if (!editorBody) return "";
 
-    const pairs = getTagPairs(editorBody);
+    const pairs = editorTagPairs;
 
     function render(from, to) {
         let html = "";
         let i = from;
 
         while (i < to) {
+            const escaped = getEscapeAt(editorBody, i);
+            if (escaped) {
+                html += `<span class="inactive-tag-bracket">${escapeHtml(tagSyntax.escape)}</span>`;
+                html += escapeHtml(escaped.value);
+                i += escaped.raw.length;
+                continue;
+            }
+
             const tagOpen = getTagOpen(editorBody, i);
             if (tagOpen && pairs.has(i)) {
                 const end = pairs.get(i);
@@ -595,35 +885,55 @@ function highlightTags(caretPosition) {
                     content = `<span class="${classPrefix}-comment">${content}</span>`;
                 }
 
-                html += `<span class="${bracketClass}">{</span>`;
+                html += `<span class="${bracketClass}">${escapeHtml(tagSyntax.open)}</span>`;
                 html += `<span class="${tagClass}">${escapeHtml(tagOpen.raw)}</span>`;
                 html += content;
-                html += `<span class="${bracketClass}">}</span>`;
+                html += `<span class="${bracketClass}">${escapeHtml(tagSyntax.close)}</span>`;
 
                 i = end + 1;
                 continue;
             }
 
-            html += escapeHtml(editorBody[i]);
-            i++;
+            let start = i;
+            while (i < to
+                && !getEscapeAt(editorBody, i)
+                && !(getTagOpen(editorBody, i) && pairs.has(i))) {
+                i++;
+            }
+
+            html += escapeHtml(editorBody.slice(start, i));
         }
 
         return html;
     }
 
-    return render(0, editorBody.length);
+    return escapeHtml(editorBody.slice(0, highlightWindow.start))
+        + render(highlightWindow.start, highlightWindow.end)
+        + escapeHtml(editorBody.slice(highlightWindow.end));
 }
 
 function computeTemplate() {
+    clearTimeout(previewTimeout);
+
     let value = templateContent;
 
     if (!value) {
         preview.srcdoc = "";
-        return
+        return;
     }
 
     value = applyMetadataToTemplate(value);
-    value = value.replaceAll("$body$", renderBodyHtml(editorBody));
+    value = value.replaceAll(`$${templateBodyKey}$`, renderBodyHtml(editorBody));
+
+    previewScroll = {
+        x: preview.contentWindow?.scrollX ?? 0,
+        y: preview.contentWindow?.scrollY ?? 0,
+    };
 
     preview.srcdoc = value;
+}
+
+function computeTemplateSoon() {
+    clearTimeout(previewTimeout);
+    previewTimeout = setTimeout(computeTemplate, previewDebounceDelay);
 }
