@@ -196,6 +196,7 @@ const optionsMenuItems = [
     { id: "open-template-button", label: "Open Template..." },
     { id: "close-template-button", label: "Close Template" },
     { id: "export-to-pdf-button", label: "Export To PDF..." },
+    { id: "toggle-spellcheck-button", tooltip: "Toggle Spellcheck" },
     { id: "clear-data-button", label: "Clear Stored Data..." },
     { id: "help-button", label: "Help" },
 ];

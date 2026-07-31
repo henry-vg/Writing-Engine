@@ -289,8 +289,11 @@ function buildMenuItems() {
             continue;
         }
 
-        button.textContent = item.label;
-        button.title = getShortcutTitle(item.label, item.shortcut, item.shift);
+        const tooltip = item.tooltip ?? item.label;
+
+        if (item.label) button.textContent = item.label;
+
+        if (tooltip) button.title = getShortcutTitle(tooltip, item.shortcut, item.shift);
     }
 }
 
@@ -307,7 +310,7 @@ function buildTagButtons() {
         const button = document.createElement("button");
         button.type = "button";
         button.className = container.className;
-        button.title = getShortcutTitle(buttonConfig.label, buttonConfig.shortcut);
+        button.title = getShortcutTitle(buttonConfig.tooltip ?? buttonConfig.label, buttonConfig.shortcut);
 
         if (buttonConfig.icon) {
             button.innerHTML = `<svg viewBox="0 0 24 24"><path d="${buttonConfig.icon}"></path></svg>`;
