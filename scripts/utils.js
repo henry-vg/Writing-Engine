@@ -56,12 +56,13 @@ async function writeFile(handle, content) {
 async function hasWritePermission(handle) {
     const options = { mode: "readwrite" };
 
-    if (await handle.queryPermission(options) === "granted") return true;
+    try {
+        if (await handle.queryPermission(options) === "granted") return true;
 
-    if (await handle.requestPermission(options) === "granted") return true;
-
-    showError(`no permission to write to "${handle.name}"`);
-    return false;
+        return await handle.requestPermission(options) === "granted";
+    } catch {
+        return false;
+    }
 }
 
 function setTemplateButtonsEnabled(enabled) {
@@ -133,9 +134,7 @@ function closeTextFile() {
     computeTemplate();
 }
 
-async function saveTextFile() {
-    if (!await hasWritePermission(textFileHandle)) return false;
-
+async function writeTextFile() {
     const content = editorInput.value;
 
     if (!await writeFile(textFileHandle, content)) return false;
@@ -147,6 +146,12 @@ async function saveTextFile() {
     textContent = content || null;
     computeText();
     return true;
+}
+
+async function saveTextFile() {
+    if (textFileHandle && await hasWritePermission(textFileHandle)) return await writeTextFile();
+
+    return await pickTextFileToSave() && await writeTextFile();
 }
 
 async function pickTextFileToSave() {
@@ -243,8 +248,6 @@ async function confirmDiscardChanges() {
     if (answer === "cancel") return false;
 
     if (answer === "proceed") return true;
-
-    if (!textFileHandle && !await pickTextFileToSave()) return false;
 
     return await saveTextFile();
 }

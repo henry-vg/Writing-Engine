@@ -91,7 +91,11 @@ function handleEditorInputScroll() {
 
 function handleFormattingButtonClick(tagValue) {
     const tagConfig = getTagConfig(tagValue);
-    if (!tagConfig) return;
+
+    if (!tagConfig) {
+        showError(`there is no tag configured for "${tagValue}"`);
+        return;
+    }
 
     editorInput.focus();
 
@@ -217,15 +221,13 @@ async function handleOpenTextButtonClick() {
 }
 
 async function handleSaveTextButtonClick() {
-    if (!textFileHandle && !await pickTextFileToSave()) return;
-
     await saveTextFile();
 }
 
 async function handleSaveTextAsButtonClick() {
     if (!await pickTextFileToSave()) return;
 
-    await saveTextFile();
+    await writeTextFile();
 }
 
 async function handleCloseTextButtonClick() {
