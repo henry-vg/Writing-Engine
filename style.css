@@ -448,18 +448,18 @@ body:has(.preview[hidden]) .main-wrapper {
     align-self: flex-end;
 }
 
-.confirm-dialog {
+.message-dialog {
     width: 350px;
     gap: var(--spacing);
 }
 
-.confirm-dialog-message {
+.dialog-message {
     color: var(--dialog-text-foreground-color);
     margin: 0;
     padding: var(--spacing);
 }
 
-.confirm-dialog-buttons {
+.dialog-buttons {
     display: flex;
     justify-content: flex-end;
     gap: var(--spacing-small);

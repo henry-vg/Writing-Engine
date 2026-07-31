@@ -11,21 +11,32 @@ function normalizeLineBreaks(text) {
     return text.replaceAll("\r\n", "\n");
 }
 
+function hasFilePickers() {
+    if (window.showOpenFilePicker && window.showSaveFilePicker) return true;
+
+    showError("this browser cannot open or save files: the File System Access API is unavailable");
+    return false;
+}
+
 async function pickFileToOpen(types) {
+    if (!hasFilePickers()) return null;
+
     try {
         const [handle] = await window.showOpenFilePicker({ types });
         return handle;
     } catch (error) {
-        if (error.name !== "AbortError") console.warn("showOpenFilePicker failed:", error);
+        if (error.name !== "AbortError") showError("could not open the file picker", error);
         return null;
     }
 }
 
 async function pickFileToSave(suggestedName, types) {
+    if (!hasFilePickers()) return null;
+
     try {
         return await window.showSaveFilePicker({ suggestedName, types });
     } catch (error) {
-        if (error.name !== "AbortError") console.warn("showSaveFilePicker failed:", error);
+        if (error.name !== "AbortError") showError("could not open the save dialog", error);
         return null;
     }
 }
@@ -37,7 +48,7 @@ async function writeFile(handle, content) {
         await writable.close();
         return true;
     } catch (error) {
-        console.warn(`writeFile("${handle.name}") failed:`, error);
+        showError(`could not write to "${handle.name}"`, error);
         return false;
     }
 }
@@ -47,7 +58,10 @@ async function hasWritePermission(handle) {
 
     if (await handle.queryPermission(options) === "granted") return true;
 
-    return await handle.requestPermission(options) === "granted";
+    if (await handle.requestPermission(options) === "granted") return true;
+
+    showError(`no permission to write to "${handle.name}"`);
+    return false;
 }
 
 function setTemplateButtonsEnabled(enabled) {
@@ -179,31 +193,46 @@ function closeAllMenus() {
     editorContextMenu.toggleAttribute("hidden", true);
 }
 
-function openConfirmDialog(message, saveLabel, proceedLabel) {
-    confirmDialogMessage.textContent = message;
-    confirmSaveButton.textContent = saveLabel ?? "";
-    confirmSaveButton.toggleAttribute("hidden", !saveLabel);
-    confirmProceedButton.textContent = proceedLabel;
-    confirmDialogWrapper.toggleAttribute("hidden", false);
-    confirmCancelButton.focus();
+function openDialog(message, saveLabel, proceedLabel, cancelLabel) {
+    closeDialog("cancel");
+
+    dialogMessage.textContent = message;
+
+    for (const [button, label] of [
+        [dialogSaveButton, saveLabel],
+        [dialogProceedButton, proceedLabel],
+        [dialogCancelButton, cancelLabel],
+    ]) {
+        button.textContent = label ?? "";
+        button.toggleAttribute("hidden", !label);
+    }
+
+    dialogWrapper.toggleAttribute("hidden", false);
+    (cancelLabel ? dialogCancelButton : dialogProceedButton).focus();
 
     return new Promise((resolve) => {
-        confirmDialogResolve = resolve;
+        dialogResolve = resolve;
     });
 }
 
-function closeConfirmDialog(answer) {
-    confirmDialogWrapper.toggleAttribute("hidden", true);
-    confirmDialogResolve?.(answer);
-    confirmDialogResolve = null;
+function closeDialog(answer) {
+    dialogWrapper.toggleAttribute("hidden", true);
+    dialogResolve?.(answer);
+    dialogResolve = null;
 }
 
 function askToSaveChanges(name) {
-    return openConfirmDialog(`Save changes to ${name} before closing?`, "Save", "Don't Save");
+    return openDialog(`Save changes to ${name} before closing?`, "Save", "Don't Save", "Cancel");
 }
 
 async function confirmAction(message) {
-    return await openConfirmDialog(message, null, "OK") === "proceed";
+    return await openDialog(message, null, "OK", "Cancel") === "proceed";
+}
+
+function showError(message, error) {
+    const reason = error?.message ? ` (${error.message})` : "";
+
+    return openDialog(`${errorMessagePrefix}${message}${reason}`, null, "OK", null);
 }
 
 async function confirmDiscardChanges() {

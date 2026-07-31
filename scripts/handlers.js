@@ -2,6 +2,14 @@ function handleWindowBlur() {
     closeAllMenus();
 }
 
+function handleWindowError(e) {
+    showError(e.message ?? "unexpected failure");
+}
+
+function handleWindowUnhandledRejection(e) {
+    showError("unexpected failure", e.reason);
+}
+
 function handleWindowBeforeUnload(e) {
     if (!needsSaving) return;
 
@@ -16,13 +24,13 @@ function handleDocumentKeyDown(e) {
     if (e.key == "Escape") {
         closeAllMenus();
 
-        if (!confirmDialogWrapper.hidden) {
-            closeConfirmDialog("cancel");
+        if (!dialogWrapper.hidden) {
+            closeDialog("cancel");
             return;
         }
     }
 
-    if (!confirmDialogWrapper.hidden) return;
+    if (!dialogWrapper.hidden) return;
 
     const ctrlOrCmd = e.ctrlKey || e.metaKey;
 
@@ -251,7 +259,11 @@ async function handleCloseTemplateButtonClick() {
 }
 
 function handleExportToPDFButtonClick() {
-    preview.contentWindow.print();
+    try {
+        preview.contentWindow.print();
+    } catch (error) {
+        showError("could not open the print dialog", error);
+    }
 }
 
 function handleHelpButtonClick() {

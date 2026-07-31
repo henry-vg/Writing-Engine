@@ -12,11 +12,11 @@ const optionsDropdown = document.getElementById("options-dropdown");
 
 const helpDialogWrapper = document.getElementById("help-dialog-wrapper");
 
-const confirmDialogWrapper = document.getElementById("confirm-dialog-wrapper");
-const confirmDialogMessage = document.getElementById("confirmDialogMessage");
-const confirmSaveButton = document.getElementById("confirm-save-button");
-const confirmProceedButton = document.getElementById("confirm-proceed-button");
-const confirmCancelButton = document.getElementById("confirm-cancel-button");
+const dialogWrapper = document.getElementById("dialog-wrapper");
+const dialogMessage = document.getElementById("dialogMessage");
+const dialogSaveButton = document.getElementById("dialog-save-button");
+const dialogProceedButton = document.getElementById("dialog-proceed-button");
+const dialogCancelButton = document.getElementById("dialog-cancel-button");
 
 const toggleThemeButton = document.getElementById("toggle-theme-button");
 const toggleSpellcheckButton = document.getElementById("toggle-spellcheck-button");

@@ -28,7 +28,7 @@ async function dbGet(key) {
             request.onerror = () => reject(request.error);
         });
     } catch (error) {
-        console.warn(`dbGet("${key}") failed:`, error);
+        showError(`could not read "${key}" in the browser storage`, error);
         return null;
     }
 }
@@ -44,7 +44,7 @@ async function dbSet(key, value) {
             tx.objectStore(DBStore).put({ key, value });
         });
     } catch (error) {
-        console.warn(`dbSet("${key}") failed:`, error);
+        showError(`could not write "${key}" in the browser storage`, error);
     }
 }
 
@@ -59,6 +59,6 @@ async function dbDelete(key) {
             tx.objectStore(DBStore).delete(key);
         });
     } catch (error) {
-        console.warn(`dbDelete("${key}") failed:`, error);
+        showError(`could not delete "${key}" in the browser storage`, error);
     }
 }

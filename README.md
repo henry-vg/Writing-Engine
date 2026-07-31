@@ -141,7 +141,7 @@ Sete scripts carregados com `defer`, na ordem em que dependem um do outro:
 |---|---|
 | `elements.js` | referências do DOM |
 | `configs.js` | tags, sintaxe, chaves do IndexedDB, textos da UI |
-| `indexed-db.js` | `dbGet`/`dbSet`/`dbDelete`, que degradam com aviso em vez de estourar |
+| `indexed-db.js` | `dbGet`/`dbSet`/`dbDelete`, que degradam avisando em vez de estourar |
 | `utils.js` | parser, renderização, arquivos, diálogos |
 | `handlers.js` | um `handleX` por evento |
 | `listeners.js` | liga evento a handler |
@@ -158,6 +158,22 @@ Duas funções fazem o trabalho:
   highlight.
 - **`computeTemplate()`** — troca `$chave$` pela metadata e `$body$` pelo texto convertido, e joga no
   `srcdoc` do preview.
+
+### Erros
+
+Nenhuma falha é engolida. Um diálogo só — o mesmo que faz as confirmações — mostra tudo no formato
+`ERROR: {mensagem}`, com o motivo do navegador entre parênteses quando existe:
+
+```
+ERROR: could not write to "livro.txt" (device is full)
+```
+
+O que passa por ali: leitura e escrita no IndexedDB, abrir e salvar arquivos, permissão de escrita
+negada, a impressão, e — como rede de segurança — `error` e `unhandledrejection` na janela, para que
+até o que eu não previ apareça. Cancelar um diálogo de arquivo **não** é erro e não avisa nada.
+
+Uma exceção deliberada: metadata mal formada não abre diálogo. O parser simplesmente não reconhece o
+bloco, porque avisar a cada tecla enquanto a linha está sendo escrita tornaria o editor inutilizável.
 
 Duas otimizações que moldam o código, ambas medidas num documento de 500KB:
 
@@ -183,7 +199,7 @@ Duas otimizações que moldam o código, ambas medidas num documento de 500KB:
 - **Metadata dentro de `<script>`.** Os valores são escapados como HTML, o que resolve texto e
   atributo; dentro de um `<script>` o parser de JS não interpreta entidades, então um apóstrofo no
   valor quebraria o script do template.
-- **Uma linha inválida invalida o bloco de metadata inteiro**, silenciosamente.
+- **Uma linha inválida invalida o bloco de metadata inteiro**, sem aviso — de propósito, veja acima.
 
 ## Próximos passos
 
