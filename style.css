@@ -368,6 +368,10 @@ body:has(.preview[hidden]) .main-wrapper {
     scrollbar-color: transparent transparent;
 }
 
+.editor-highlight::after {
+    content: "\a";
+}
+
 /* ---------- Highlight ---------- */
 [class^="active-"] {
     --alpha: 1;
