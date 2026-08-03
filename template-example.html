@@ -73,12 +73,75 @@
             text-indent: -1.2cm;
             padding-left: 1.2cm;
         }
+
+        /* the printed flow breaks the page here; inside the ruler below, the
+           equivalent break is a column break */
+        .page-break {
+            break-after: page;
+        }
+
+        .doc-ruler .page-break {
+            break-after: column;
+        }
+
+        .doc-toc-heading {
+            font-size: 13pt;
+            text-align: center;
+            font-variant-caps: small-caps;
+            margin-bottom: 20pt;
+        }
+
+        .doc-toc-entry {
+            display: flex;
+            align-items: baseline;
+            gap: 0.15cm;
+            font-size: 11pt;
+        }
+
+        .doc-toc-entry-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .doc-toc-entry-leader {
+            flex: 1;
+            border-bottom: 1pt dotted currentColor;
+        }
+
+        .doc-toc-entry-page {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .doc-toc-level-2 {
+            padding-left: 0.6cm;
+        }
+
+        .doc-toc-level-3 {
+            padding-left: 1.2cm;
+        }
+
+        /* measures where the pages break, so it must never be seen or printed:
+           the script removes it as soon as it has read the positions */
+        .doc-ruler {
+            position: absolute;
+            visibility: hidden;
+            top: 0;
+            left: 0;
+            column-gap: 0;
+            column-fill: auto;
+        }
     </style>
 </head>
 
 <body>
     <div class="doc-author-date">$author$ – <span id="doc-date">$date$</span></div>
     <div class="doc-title">$title$</div>
+
+    <nav class="doc-toc page-break" id="doc-toc" hidden>
+        <div class="doc-toc-heading">Índice</div>
+    </nav>
+
     <div class="doc-body" id="doc-body">$body$</div>
 
     <script>
@@ -121,6 +184,64 @@
                     });
             })
             .join("");
+
+        const toc = document.getElementById("doc-toc");
+        const headings = [...docBody.querySelectorAll("h1, h2, h3")];
+
+        if (headings.length && "$content$".toLowerCase().trim() === "true") {
+            for (const heading of headings) {
+                const entry = document.createElement("div");
+                entry.className = "doc-toc-entry doc-toc-level-" + heading.tagName[1];
+
+                const title = document.createElement("span");
+                title.className = "doc-toc-entry-title";
+                title.textContent = heading.textContent;
+
+                const leader = document.createElement("span");
+                leader.className = "doc-toc-entry-leader";
+
+                const page = document.createElement("span");
+                page.className = "doc-toc-entry-page";
+
+                entry.append(title, leader, page);
+                toc.append(entry);
+            }
+
+            toc.hidden = false;
+
+            const pageRule = [...document.styleSheets]
+                .flatMap(sheet => [...sheet.cssRules])
+                .find(rule => rule instanceof CSSPageRule);
+
+            const [pageWidth, pageHeight = pageWidth] = pageRule.style.size.split(" ");
+            const { marginTop, marginRight, marginBottom, marginLeft } = pageRule.style;
+
+            const ruler = document.createElement("div");
+            ruler.className = "doc-ruler";
+            ruler.style.width = `calc(${pageWidth} - ${marginLeft} - ${marginRight})`;
+            ruler.style.height = `calc(${pageHeight} - ${marginTop} - ${marginBottom})`;
+            ruler.style.columnWidth = ruler.style.width;
+
+            for (const child of document.body.children) {
+                if (child.tagName !== "SCRIPT") {
+                    ruler.append(child.cloneNode(true));
+                }
+            }
+
+            document.body.append(ruler);
+
+            const box = ruler.getBoundingClientRect();
+            const measured = ruler.querySelectorAll(".doc-body h1, .doc-body h2, .doc-body h3");
+            const pages = toc.querySelectorAll(".doc-toc-entry-page");
+
+            measured.forEach((heading, index) => {
+                const rect = heading.getClientRects()[0] ?? heading.getBoundingClientRect();
+
+                pages[index].textContent = Math.round((rect.left - box.left) / box.width) + 1;
+            });
+
+            ruler.remove();
+        }
     </script>
 </body>
 
