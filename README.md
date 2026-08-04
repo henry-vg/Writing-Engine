@@ -12,3 +12,4 @@
     - Highlight em palavras iguais
     - Change all occurences
 - Escrever README.md
+- Escrever help
