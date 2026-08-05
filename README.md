@@ -4,6 +4,7 @@
 - Adicionar template padrão
 - Rever menu
 - Não atualizar preview se não estiver visível
+- Adicionar opções para fonte no editor
 - Adicionar imagens
 - Adicionar atalhos de editor
     - Duplicar linha
