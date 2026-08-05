@@ -598,10 +598,13 @@ function getTemplateMetadataKeys() {
 }
 
 function applyMetadataToTemplate(value) {
-    if (!editorMetadata) return value;
+    const placeholders = value.match(/\$[a-zA-Z][\w-]*\$/g) ?? [];
+    const keys = placeholders.map((placeholder) => placeholder.slice(1, -1));
 
-    for (const [key, metadataValue] of Object.entries(editorMetadata.parsed)) {
-        value = value.replaceAll(`$${key}$`, escapeHtml(metadataValue));
+    for (const key of [...new Set(keys)]) {
+        if (key === templateBodyKey) continue;
+
+        value = value.replaceAll(`$${key}$`, escapeHtml(editorMetadata?.parsed[key] ?? ""));
     }
 
     return value;
