@@ -6,12 +6,18 @@
     <style>
         @page {
             size: 14cm 21cm;
-            margin: 2.5cm 1.5cm 2.5cm 1.5cm;
+            margin: 2.5cm 1.5cm;
 
             @bottom-center {
-                content: "—\2002" counter(page) "\2002—";
+                content: "\2014\2002" counter(page) "\2002\2014";
                 font-family: "Garamond", serif;
                 font-size: 11pt;
+            }
+        }
+
+        @page doc-cover {
+            @bottom-center {
+                content: "";
             }
         }
 
@@ -20,82 +26,54 @@
             font-family: "Garamond", serif;
         }
 
-        .cover {
+        [hidden] {
+            display: none;
+        }
+
+        .doc-meta {
+            font-size: 11pt;
+            font-style: italic;
+            white-space: nowrap;
+        }
+
+        .doc-title {
+            font-size: 18pt;
+            font-variant-caps: small-caps;
+            text-align: center;
+        }
+
+        .doc-cover {
+            page: doc-cover;
             position: relative;
-            height: 100vh;
-            page-break-after: always;
+            height: 16cm;
             break-after: page;
         }
 
-        .doc-author-date {
+        .doc-cover .doc-meta {
             position: absolute;
-            font-size: 11pt;
-            font-style: italic;
             left: 50%;
             transform: translateX(-50%);
         }
 
-        .doc-title {
+        .doc-cover .doc-title {
             position: absolute;
-            font-size: 18pt;
-            font-variant-caps: small-caps;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            width: 100%;
         }
 
-        .doc-body p {
-            font-size: 11pt;
-            text-align: justify;
-            text-indent: 0.7cm;
-            hyphens: auto;
-            margin: 0;
-            margin-block: 0;
-        }
-
-        h1 {
-            all: unset;
-            display: block;
-            font-size: 18pt;
-            text-align: center;
-            font-variant-caps: small-caps;
-            margin-top: 64pt;
+        .doc-header {
             margin-bottom: 36pt;
-            break-before: page;
+            text-align: center;
         }
 
-        h1:has(+ h2),
-        h1:has(+ h3) {
+        .doc-header .doc-meta {
             margin-bottom: 6pt;
         }
 
-        h2 {
-            all: unset;
-            display: block;
-            font-size: 16pt;
-            text-align: center;
-            margin-bottom: 36pt;
-        }
-
-        h2:has(+ h3) {
-            margin-bottom: 6pt;
-        }
-
-        h3 {
-            all: unset;
-            display: block;
-            font-size: 13pt;
-            text-align: center;
-            margin-bottom: 36pt;
-        }
-
-        div.stanza {
-            margin-bottom: 16pt;
-        }
-
-        div.stanza p {
-            text-indent: -1.2cm;
-            padding-left: 1.2cm;
+        .doc-pages {
+            counter-reset: page 0;
         }
 
         .doc-toc {
@@ -103,10 +81,10 @@
         }
 
         .doc-toc-heading {
-            font-size: 18pt;
-            text-align: center;
-            font-variant-caps: small-caps;
             margin-bottom: 36pt;
+            font-size: 18pt;
+            font-variant-caps: small-caps;
+            text-align: center;
         }
 
         .doc-toc-entry {
@@ -117,14 +95,15 @@
         }
 
         .doc-toc-entry-title {
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .doc-toc-entry-leader {
             flex: 1;
             border-bottom: 1pt solid transparent;
+            opacity: 0.45;
         }
 
         .doc-toc-entry-page {
@@ -139,31 +118,142 @@
             padding-left: 1.2cm;
         }
 
+        .doc-body p {
+            margin: 0;
+            margin-block: 0;
+            font-size: 11pt;
+            hyphens: auto;
+            text-align: justify;
+            text-indent: 0.7cm;
+        }
+
+        .doc-body[data-drop-cap="true"] p:not(p + p) {
+            text-indent: 0;
+        }
+
+        .doc-body[data-drop-cap="true"] p:not(p + p)::first-letter {
+            float: left;
+            margin-right: 4pt;
+            font-size: 36pt;
+            line-height: 0.9;
+        }
+
+        .doc-body h1,
+        .doc-body h2,
+        .doc-body h3 {
+            all: unset;
+            display: block;
+            text-align: center;
+        }
+
+        .doc-body h1 {
+            margin-top: 64pt;
+            margin-bottom: 36pt;
+            break-before: page;
+            font-size: 18pt;
+            font-variant-caps: small-caps;
+        }
+
+        .doc-pages>.doc-body:first-child>h1:first-child {
+            break-before: auto;
+        }
+
+        .doc-body h1:has(+ h2),
+        .doc-body h1:has(+ h3) {
+            margin-bottom: 6pt;
+        }
+
+        .doc-body h2 {
+            margin-bottom: 36pt;
+            font-size: 14pt;
+        }
+
+        .doc-body h2:not(h1 + h2):not(h2 + h2):not(h3 + h2),
+        .doc-body h3:not(h1 + h3):not(h2 + h3):not(h3 + h3) {
+            break-before: page;
+        }
+
+        .doc-body h2:has(+ h3) {
+            margin-bottom: 6pt;
+        }
+
+        .doc-body h3 {
+            margin-bottom: 36pt;
+            font-size: 12pt;
+        }
+
+        .doc-body .stanza {
+            margin-bottom: 16pt;
+        }
+
+        .doc-body .stanza p {
+            padding-left: 1.2cm;
+            text-indent: -1.2cm;
+        }
+
         .doc-ruler {
             position: absolute;
-            visibility: hidden;
             top: 0;
             left: 0;
-            column-gap: 0;
+            visibility: hidden;
             column-fill: auto;
+            column-gap: 0;
+        }
+
+        .doc-ruler .doc-toc {
+            break-after: column;
+        }
+
+        .doc-ruler .doc-body h1 {
+            break-before: column;
+        }
+
+        .doc-ruler .doc-body h2:not(h1 + h2):not(h2 + h2):not(h3 + h2),
+        .doc-ruler .doc-body h3:not(h1 + h3):not(h2 + h3):not(h3 + h3) {
+            break-before: column;
+        }
+
+        .doc-ruler .doc-pages>.doc-body:first-child>h1:first-child {
+            break-before: auto;
         }
     </style>
 </head>
 
 <body>
-    <div class="cover">
-        <div class="doc-author-date"><span titlecase>$author$</span> – <span id="doc-date">$date$</span></div>
-        <div class="doc-title" titlecase>$title$</div>
-    </div>
-    <nav class="doc-toc" id="doc-toc" hidden>
-        <div class="doc-toc-heading">Sumário</div>
-    </nav>
+    <section class="doc-cover" id="doc-cover">
+        <div class="doc-meta" id="doc-meta">
+            <span id="doc-author" data-title-case>$author$</span>
+            <span id="doc-meta-separator"> &ndash; </span>
+            <span id="doc-date">$date$</span>
+        </div>
+        <div class="doc-title" id="doc-title" data-title-case>$title$</div>
+    </section>
 
-    <div class="doc-body" id="doc-body">$body$</div>
+    <main class="doc-pages" id="doc-pages">
+        <nav class="doc-toc" id="doc-toc" hidden>
+            <div class="doc-toc-heading">Sumário</div>
+        </nav>
+
+        <div class="doc-body" id="doc-body">$body$</div>
+    </main>
 
     <script>
-        // transform title case
-        const minorWords = new Set([
+        const docMetadata = {
+            cover: "$cover$".trim().toLowerCase(),
+            content: "$content$".trim().toLowerCase(),
+            dropCap: "$dropCap$".trim().toLowerCase(),
+        };
+        const docPage = {
+            width: "14cm",
+            height: "21cm",
+            marginTop: "2.5cm",
+            marginRight: "1.5cm",
+            marginBottom: "2.5cm",
+            marginLeft: "1.5cm",
+        };
+        const trueValue = "true";
+
+        const titleMinorWords = new Set([
             "a", "à", "às",
             "o", "os", "as",
             "ao", "aos",
@@ -177,123 +267,202 @@
             "ou"
         ]);
 
-        const titleCase = (text) => {
-            const words = text.split(/\s+/);
+        const docCover = document.getElementById("doc-cover");
+        const docMeta = document.getElementById("doc-meta");
+        const docAuthor = document.getElementById("doc-author");
+        const docMetaSeparator = document.getElementById("doc-meta-separator");
+        const docDate = document.getElementById("doc-date");
+        const docTitle = document.getElementById("doc-title");
+        const docPages = document.getElementById("doc-pages");
+        const docToc = document.getElementById("doc-toc");
+        const docBody = document.getElementById("doc-body");
+
+        function toTitleCase(text) {
+            const words = text.trim().split(/\s+/).filter(Boolean);
 
             return words.map((word, index) => {
                 const first = index === 0;
                 const last = index === words.length - 1;
+                const lower = word.toLocaleLowerCase("pt-BR");
 
-                if (!first && !last && minorWords.has(word)) {
-                    return word;
+                if (!first && !last && titleMinorWords.has(lower)) {
+                    return lower;
                 }
 
-                return word.charAt(0).toUpperCase() + word.slice(1);
+                return word.charAt(0).toLocaleUpperCase("pt-BR") + word.slice(1);
             }).join(" ");
-        };
+        }
 
-        document.querySelectorAll("h1, h2, h3, [titlecase]").forEach(el => {
-            el.textContent = titleCase(el.textContent.trim());
-        });
+        function formatDocDate(text) {
+            if (!/^\d{4}-\d{2}(-\d{2})?$/.test(text)) return text;
 
-        // parse date
-        const docDate = document.getElementById("doc-date");
-        const date_content = docDate.textContent.trim();
-
-        if (/^\d{4}-\d{2}(-\d{2})?$/.test(date_content)) {
-            const [y, m, d = 1] = date_content.split("-").map(Number);
-
-            const date = new Date(y, m - 1, d);
-
-            const options = d === 1 && date_content.length === 7
+            const [year, month, day = 1] = text.split("-").map(Number);
+            const date = new Date(year, month - 1, day);
+            const options = day === 1 && text.length === 7
                 ? { month: "long", year: "numeric" }
                 : { day: "2-digit", month: "long", year: "numeric" };
 
-            docDate.textContent = date.toLocaleDateString("pt-BR", options);
+            return date.toLocaleDateString("pt-BR", options);
         }
 
-        // add curly quotes
-        const docBody = document.getElementById("doc-body");
-        docBody.innerHTML = docBody.innerHTML
-            .split(/(<[^>]+>)/g)
-            .map(part => {
-                if (part.startsWith("<") && part.endsWith(">")) {
-                    return part;
-                }
-                let openDouble = true;
-                let openSingle = true;
-                return part
+        function renderDocCover() {
+            const title = docTitle.textContent.trim();
+            const author = toTitleCase(docAuthor.textContent);
+            const date = formatDocDate(docDate.textContent.trim());
+            const hasCover = docMetadata.cover === trueValue;
+            const hasHeading = !!author || !!date || !!title;
+
+            if (!hasCover && !hasHeading) {
+                docCover.remove();
+                return;
+            }
+
+            if (!hasCover) {
+                docCover.className = "doc-header";
+                docPages.prepend(docCover);
+            }
+
+            docTitle.textContent = toTitleCase(title);
+            docAuthor.textContent = author;
+            docDate.textContent = date;
+
+            docMeta.hidden = !author && !date;
+            docAuthor.hidden = !author;
+            docMetaSeparator.hidden = !author || !date;
+            docDate.hidden = !date;
+            docTitle.hidden = !title;
+        }
+
+        function applyDocTitleCase() {
+            docBody.querySelectorAll("h1, h2, h3, [data-title-case]").forEach((element) => {
+                element.textContent = toTitleCase(element.textContent);
+            });
+        }
+
+        function applyDocDropCap() {
+            docBody.dataset.dropCap = docMetadata.dropCap === trueValue;
+        }
+
+        function applyDocCurlyQuotes() {
+            const walker = document.createTreeWalker(docBody, NodeFilter.SHOW_TEXT);
+            const textNodes = [];
+            let openDoubleQuote = true;
+            let openSingleQuote = true;
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            for (const node of textNodes) {
+                node.nodeValue = node.nodeValue
                     .replace(/"/g, () => {
-                        const q = openDouble ? "\u201C" : "\u201D";
-                        openDouble = !openDouble;
-                        return q;
+                        const quote = openDoubleQuote ? "\u201C" : "\u201D";
+                        openDoubleQuote = !openDoubleQuote;
+                        return quote;
                     })
                     .replace(/'/g, () => {
-                        const q = openSingle ? "\u2018" : "\u2019"
-                        openSingle = !openSingle;
-                        return q;
+                        const quote = openSingleQuote ? "\u2018" : "\u2019";
+                        openSingleQuote = !openSingleQuote;
+                        return quote;
                     });
-            })
-            .join("");
-
-        // add table of contents
-        const toc = document.getElementById("doc-toc");
-        const headings = [...docBody.querySelectorAll("h1, h2, h3")];
-
-        if (headings.length && "$content$".toLowerCase().trim() === "true") {
-            for (const heading of headings) {
-                const entry = document.createElement("div");
-                entry.className = "doc-toc-entry doc-toc-level-" + heading.tagName[1];
-
-                const title = document.createElement("span");
-                title.className = "doc-toc-entry-title";
-                title.textContent = heading.textContent;
-
-                const leader = document.createElement("span");
-                leader.className = "doc-toc-entry-leader";
-
-                const page = document.createElement("span");
-                page.className = "doc-toc-entry-page";
-
-                entry.append(title, leader, page);
-                toc.append(entry);
             }
+        }
 
-            toc.hidden = false;
-
-            const pageRule = [...document.styleSheets]
-                .flatMap(sheet => [...sheet.cssRules])
-                .find(rule => rule instanceof CSSPageRule);
-
-            const [pageWidth, pageHeight = pageWidth] = pageRule.style.size.split(" ");
-            const { marginTop, marginRight, marginBottom, marginLeft } = pageRule.style;
-
-            const ruler = document.createElement("div");
-            ruler.className = "doc-ruler";
-            ruler.style.width = `calc(${pageWidth} - ${marginLeft} - ${marginRight})`;
-            ruler.style.height = `calc(${pageHeight} - ${marginTop} - ${marginBottom})`;
-            ruler.style.columnWidth = ruler.style.width;
-
-            for (const child of document.body.children) {
-                if (child.tagName !== "SCRIPT") {
-                    ruler.append(child.cloneNode(true));
+        function getDocPageRule() {
+            for (const sheet of document.styleSheets) {
+                for (const rule of sheet.cssRules) {
+                    if (rule.type === window.CSSRule?.PAGE_RULE || rule.constructor.name === "CSSPageRule") {
+                        return rule;
+                    }
                 }
             }
 
+            return null;
+        }
+
+        function getDocPage() {
+            const pageRule = getDocPageRule();
+            if (!pageRule) return docPage;
+
+            const [width, height = width] = pageRule.style.size.split(" ");
+
+            return {
+                width: width || docPage.width,
+                height: height || docPage.height,
+                marginTop: pageRule.style.marginTop || docPage.marginTop,
+                marginRight: pageRule.style.marginRight || docPage.marginRight,
+                marginBottom: pageRule.style.marginBottom || docPage.marginBottom,
+                marginLeft: pageRule.style.marginLeft || docPage.marginLeft,
+            };
+        }
+
+        function createDocRuler() {
+            const page = getDocPage();
+            const ruler = document.createElement("div");
+
+            ruler.className = "doc-ruler";
+            ruler.style.width = `calc(${page.width} - ${page.marginLeft} - ${page.marginRight})`;
+            ruler.style.height = `calc(${page.height} - ${page.marginTop} - ${page.marginBottom})`;
+            ruler.style.columnWidth = ruler.style.width;
+            ruler.append(docPages.cloneNode(true));
             document.body.append(ruler);
 
-            const box = ruler.getBoundingClientRect();
-            const measured = ruler.querySelectorAll(".doc-body h1, .doc-body h2, .doc-body h3");
-            const pages = toc.querySelectorAll(".doc-toc-entry-page");
+            return ruler;
+        }
 
-            measured.forEach((heading, index) => {
-                const rect = heading.getClientRects()[0] ?? heading.getBoundingClientRect();
+        function fillDocTocPageNumbers() {
+            const ruler = createDocRuler();
+            if (!ruler) return;
 
-                pages[index].textContent = Math.round((rect.left - box.left) / box.width) + 1;
+            const rulerBox = ruler.getBoundingClientRect();
+            const rulerHeadings = ruler.querySelectorAll(".doc-body h1, .doc-body h2, .doc-body h3");
+            const tocPages = docToc.querySelectorAll(".doc-toc-entry-page");
+            const docCoverPageOffset = docMetadata.cover === trueValue ? 1 : 0;
+
+            rulerHeadings.forEach((heading, index) => {
+                const headingBox = heading.getClientRects()[0] ?? heading.getBoundingClientRect();
+                const pageOffset = Math.max(0, headingBox.left - rulerBox.left);
+                const pageIndex = Math.floor((pageOffset + 0.5) / rulerBox.width);
+
+                tocPages[index].textContent = pageIndex + 1 + docCoverPageOffset;
             });
 
             ruler.remove();
         }
+
+        function renderDocToc() {
+            const headings = [...docBody.querySelectorAll("h1, h2, h3")];
+
+            if (docMetadata.content !== trueValue || !headings.length) {
+                docToc.remove();
+                return;
+            }
+
+            for (const heading of headings) {
+                const entry = document.createElement("div");
+                const title = document.createElement("span");
+                const leader = document.createElement("span");
+                const page = document.createElement("span");
+
+                entry.className = `doc-toc-entry doc-toc-level-${heading.tagName[1]}`;
+                title.className = "doc-toc-entry-title";
+                leader.className = "doc-toc-entry-leader";
+                page.className = "doc-toc-entry-page";
+
+                title.textContent = heading.textContent;
+                entry.append(title, leader, page);
+                docToc.append(entry);
+            }
+
+            docToc.hidden = false;
+            fillDocTocPageNumbers();
+        }
+
+        renderDocCover();
+        applyDocDropCap();
+        applyDocTitleCase();
+        applyDocCurlyQuotes();
+        renderDocToc();
     </script>
 </body>
 
