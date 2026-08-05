@@ -14,3 +14,6 @@
     - Change all occurences
 - Escrever README.md
 - Escrever help
+- Corrigir desalinhamento de ctrl+f no browser
+- Recuar 4 espaços com tab
+- Description de metadata na tooltip
