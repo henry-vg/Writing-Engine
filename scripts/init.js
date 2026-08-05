@@ -1,7 +1,7 @@
 let editorContent = null;
 let editorMetadata = null;
 let editorBody = null;
-let textContent = null;
+let textFileContent = null;
 let templateContent = null;
 let needsSaving = false;
 let textFileHandle = null;
@@ -13,18 +13,18 @@ let previewTimeout = null;
 let previewScroll = { x: 0, y: 0 };
 
 (async () => {
-    const cachedText = await dbGet(DBTextKey);
+    const cachedText = await dbGet(dbTextKey);
     loadTextFile(cachedText?.name ?? noTextFileMessage, cachedText?.content ?? null);
 
-    const cachedTemplate = await dbGet(DBTemplateKey);
+    const cachedTemplate = await dbGet(dbTemplateKey);
     loadTemplateFile(cachedTemplate?.name ?? noTemplateFileMessage, cachedTemplate?.content ?? null);
 
-    textFileHandle = await dbGet(DBTextHandleKey);
+    textFileHandle = await dbGet(dbTextHandleKey);
 
-    loadTheme(await dbGet(DBThemeKey) ?? defaultTheme);
-    loadPreviewVisible(await dbGet(DBPreviewVisibleKey) ?? defaultPreviewVisible);
-    loadPreviewNegative(await dbGet(DBPreviewNegativeKey) ?? defaultPreviewNegative);
-    loadSpellcheck(await dbGet(DBSpellcheckKey) ?? defaultSpellcheck);
+    loadTheme(await dbGet(dbThemeKey) ?? defaultTheme);
+    loadPreviewVisible(await dbGet(dbPreviewVisibleKey) ?? defaultPreviewVisible);
+    loadPreviewNegative(await dbGet(dbPreviewNegativeKey) ?? defaultPreviewNegative);
+    loadSpellcheck(await dbGet(dbSpellcheckKey) ?? defaultSpellcheck);
 })();
 
 buildMenuItems();
@@ -32,5 +32,5 @@ buildMenuItems();
 editorInput.focus();
 preview.toggleAttribute("hidden", true);
 
-computeText();
-computeTemplate();
+computeEditor();
+computePreview();

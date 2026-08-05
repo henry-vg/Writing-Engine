@@ -3,10 +3,10 @@ function openDb() {
     if (dbPromise) return dbPromise;
 
     dbPromise = new Promise((resolve, reject) => {
-        const request = indexedDB.open(DBName, 1);
+        const request = indexedDB.open(dbName, 1);
 
         request.onupgradeneeded = () => {
-            request.result.createObjectStore(DBStore, { keyPath: "key" });
+            request.result.createObjectStore(dbStore, { keyPath: "key" });
         };
 
         request.onsuccess = () => resolve(request.result);
@@ -21,8 +21,8 @@ async function dbGet(key) {
         const db = await openDb();
 
         return await new Promise((resolve, reject) => {
-            const tx = db.transaction(DBStore, "readonly");
-            const request = tx.objectStore(DBStore).get(key);
+            const tx = db.transaction(dbStore, "readonly");
+            const request = tx.objectStore(dbStore).get(key);
 
             request.onsuccess = () => resolve(request.result?.value ?? null);
             request.onerror = () => reject(request.error);
@@ -38,10 +38,10 @@ async function dbSet(key, value) {
         const db = await openDb();
 
         return await new Promise((resolve, reject) => {
-            const tx = db.transaction(DBStore, "readwrite");
+            const tx = db.transaction(dbStore, "readwrite");
             tx.oncomplete = () => resolve();
             tx.onerror = () => reject(tx.error);
-            tx.objectStore(DBStore).put({ key, value });
+            tx.objectStore(dbStore).put({ key, value });
         });
     } catch (error) {
         showError(`could not write "${key}" in the browser storage`, error);
@@ -53,10 +53,10 @@ async function dbClear() {
         const db = await openDb();
 
         return await new Promise((resolve, reject) => {
-            const tx = db.transaction(DBStore, "readwrite");
+            const tx = db.transaction(dbStore, "readwrite");
             tx.oncomplete = () => resolve();
             tx.onerror = () => reject(tx.error);
-            tx.objectStore(DBStore).clear();
+            tx.objectStore(dbStore).clear();
         });
     } catch (error) {
         showError("could not clear the browser storage", error);
@@ -68,10 +68,10 @@ async function dbDelete(key) {
         const db = await openDb();
 
         return await new Promise((resolve, reject) => {
-            const tx = db.transaction(DBStore, "readwrite");
+            const tx = db.transaction(dbStore, "readwrite");
             tx.oncomplete = () => resolve();
             tx.onerror = () => reject(tx.error);
-            tx.objectStore(DBStore).delete(key);
+            tx.objectStore(dbStore).delete(key);
         });
     } catch (error) {
         showError(`could not delete "${key}" in the browser storage`, error);

@@ -1,12 +1,12 @@
-const DBName = "writing-engine";
-const DBStore = "kv";
-const DBTemplateKey = "template";
-const DBTextKey = "text";
-const DBTextHandleKey = "text-handle";
-const DBThemeKey = "theme";
-const DBPreviewVisibleKey = "preview-visible";
-const DBPreviewNegativeKey = "preview-negative";
-const DBSpellcheckKey = "spellcheck";
+const dbName = "writing-engine";
+const dbStore = "kv";
+const dbTemplateKey = "template";
+const dbTextKey = "text";
+const dbTextHandleKey = "text-handle";
+const dbThemeKey = "theme";
+const dbPreviewVisibleKey = "preview-visible";
+const dbPreviewNegativeKey = "preview-negative";
+const dbSpellcheckKey = "spellcheck";
 const defaultTheme = "dark";
 const defaultPreviewVisible = true;
 const defaultPreviewNegative = false;
@@ -186,7 +186,7 @@ const tags = {
             value: "\u211d"
         }
     }
-}
+};
 
 const menuElements = [
     { button: titlesButton, dropdown: titlesDropdown },

@@ -1,3 +1,4 @@
+/* ---------- Shared ---------- */
 function escapeHtml(text) {
     return text
         .replace(/&/g, "&amp;")
@@ -7,6 +8,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#39;");
 }
 
+/* ---------- Files ---------- */
 function normalizeLineBreaks(text) {
     return text.replaceAll("\r\n", "\n");
 }
@@ -100,7 +102,7 @@ function loadTemplateFile(name, content) {
 
     templateContent = withScrollBar;
     loadPreviewVisible(previewVisible);
-    computeTemplate();
+    computePreview();
 }
 
 function closeTemplateFile() {
@@ -108,7 +110,7 @@ function closeTemplateFile() {
     templateContent = null;
     setTemplateButtonsEnabled(false);
     loadPreviewVisible(previewVisible);
-    computeTemplate();
+    computePreview();
 }
 
 function loadTextFile(name, content) {
@@ -119,19 +121,19 @@ function loadTextFile(name, content) {
     textFilePath.textContent = name;
     closeTextButton.toggleAttribute("disabled", content === null);
     editorInput.value = content ?? "";
-    textContent = content || null;
-    computeText();
-    computeTemplate();
+    textFileContent = content || null;
+    computeEditor();
+    computePreview();
 }
 
 function closeTextFile() {
     closeTextButton.toggleAttribute("disabled", true);
     textFilePath.textContent = noTextFileMessage;
     editorInput.value = "";
-    textContent = null;
+    textFileContent = null;
     textFileHandle = null;
-    computeText();
-    computeTemplate();
+    computeEditor();
+    computePreview();
 }
 
 async function writeTextFile() {
@@ -139,12 +141,12 @@ async function writeTextFile() {
 
     if (!await writeFile(textFileHandle, content)) return false;
 
-    await dbSet(DBTextKey, { name: textFileHandle.name, content });
+    await dbSet(dbTextKey, { name: textFileHandle.name, content });
 
     textFilePath.textContent = textFileHandle.name;
     closeTextButton.toggleAttribute("disabled", false);
-    textContent = content || null;
-    computeText();
+    textFileContent = content || null;
+    computeEditor();
     return true;
 }
 
@@ -160,10 +162,11 @@ async function pickTextFileToSave() {
     if (!handle) return false;
 
     textFileHandle = handle;
-    await dbSet(DBTextHandleKey, handle);
+    await dbSet(dbTextHandleKey, handle);
     return true;
 }
 
+/* ---------- Preferences ---------- */
 function loadTheme(theme) {
     document.documentElement.setAttribute("theme", theme);
 }
@@ -187,17 +190,7 @@ function loadSpellcheck(enabled) {
     toggleSpellcheckButton.textContent = enabled ? disableSpellcheckMessage : enableSpellcheckMessage;
 }
 
-function closeAllMenuDropdowns() {
-    for (const { dropdown } of menuElements) {
-        dropdown.toggleAttribute("hidden", true);
-    }
-}
-
-function closeAllMenus() {
-    closeAllMenuDropdowns();
-    editorContextMenu.toggleAttribute("hidden", true);
-}
-
+/* ---------- Dialogs ---------- */
 function openDialog(message, saveLabel, proceedLabel, cancelLabel) {
     closeDialog("cancel");
 
@@ -230,11 +223,6 @@ function getFileMessage(message, name) {
     return message.replace(fileNamePlaceholder, name);
 }
 
-function askToSaveChanges(name) {
-    return openDialog(getFileMessage(saveChangesMessage, name),
-        dialogLabels.save, dialogLabels.discard, dialogLabels.cancel);
-}
-
 async function confirmAction(message) {
     return await openDialog(message, null, dialogLabels.confirm, dialogLabels.cancel) === "proceed";
 }
@@ -248,7 +236,12 @@ function showError(message, error) {
 async function confirmDiscardChanges() {
     if (!needsSaving) return true;
 
-    const answer = await askToSaveChanges(textFilePath.textContent);
+    const answer = await openDialog(
+        getFileMessage(saveChangesMessage, textFilePath.textContent),
+        dialogLabels.save,
+        dialogLabels.discard,
+        dialogLabels.cancel
+    );
 
     if (answer === "cancel") return false;
 
@@ -257,27 +250,16 @@ async function confirmDiscardChanges() {
     return await saveTextFile();
 }
 
-function openEditorContextMenu(x, y) {
+/* ---------- Menus ---------- */
+function closeAllMenuDropdowns() {
+    for (const { dropdown } of menuElements) {
+        dropdown.toggleAttribute("hidden", true);
+    }
+}
+
+function closeAllMenus() {
     closeAllMenuDropdowns();
-    editorContextMenu.toggleAttribute("hidden", false);
-
-    const left = Math.min(x, window.innerWidth - editorContextMenu.offsetWidth);
-    const top = y - editorContextMenu.offsetHeight;
-
-    editorContextMenu.style.left = `${Math.max(0, left)}px`;
-    editorContextMenu.style.top = `${Math.max(0, top)}px`;
-}
-
-function getShortcutTitle(label, shortcut, shift) {
-    if (!shortcut) return label;
-
-    const modifiers = shift ? shortcutModifiers.shift : shortcutModifiers.plain;
-
-    return `${label} (${modifiers}+${shortcut.toUpperCase()})`;
-}
-
-function getMenuShortcut(key, shift) {
-    return optionsMenuItems.find((item) => item.shortcut === key && !!item.shift === shift) ?? null;
+    editorContextMenu.toggleAttribute("hidden", true);
 }
 
 function buildMenuItems() {
@@ -302,7 +284,12 @@ function applyButtonConfig(button, config) {
         button.textContent = config.label;
     }
 
-    if (tooltip) button.title = getShortcutTitle(tooltip, config.shortcut, config.shift);
+    if (tooltip) {
+        const modifiers = config.shift ? shortcutModifiers.shift : shortcutModifiers.plain;
+        button.title = config.shortcut
+            ? `${tooltip} (${modifiers}+${config.shortcut.toUpperCase()})`
+            : tooltip;
+    }
 }
 
 function buildTagButtons() {
@@ -327,6 +314,7 @@ function buildTagButtons() {
     return tagButtons;
 }
 
+/* ---------- Metadata ---------- */
 function getMetadataLine(key) {
     return `${key}: `;
 }
@@ -343,31 +331,26 @@ function parseMetadataLine(line) {
     };
 }
 
-function findMetadataEnd(value) {
-    const fenceLine = `\n${metadataFence}`;
-    let index = value.indexOf(fenceLine, metadataFence.length);
-
-    while (index !== -1) {
-        const lineEnd = index + fenceLine.length;
-
-        if (lineEnd === value.length || value[lineEnd] === "\n") {
-            return index + 1;
-        }
-
-        index = value.indexOf(fenceLine, lineEnd);
-    }
-
-    return null;
-}
-
 function parseMetadata(value) {
     const opening = `${metadataFence}\n`;
 
     if (!value.startsWith(opening)) return null;
 
-    const endIndex = findMetadataEnd(value);
+    const fenceLine = `\n${metadataFence}`;
+    let endIndex = value.indexOf(fenceLine, metadataFence.length);
 
-    if (endIndex === null) return null;
+    while (endIndex !== -1) {
+        const lineEnd = endIndex + fenceLine.length;
+
+        if (lineEnd === value.length || value[lineEnd] === "\n") {
+            endIndex++;
+            break;
+        }
+
+        endIndex = value.indexOf(fenceLine, lineEnd);
+    }
+
+    if (endIndex === -1) return null;
 
     const raw = value.slice(0, endIndex + metadataFence.length);
     const inner = value.slice(opening.length, endIndex);
@@ -400,10 +383,7 @@ function isMetadataActive(caretPosition) {
     return editorMetadata !== null && caretPosition <= editorMetadata.rawLength;
 }
 
-function getEditorBody(value, metadata) {
-    return metadata ? value.slice(metadata.rawLength) : value;
-}
-
+/* ---------- Tags ---------- */
 function getTagConfig(tagValue) {
     for (const [key, tagConfig] of Object.entries(tags)) {
         if (!tagConfig.values.includes(tagValue)) continue;
@@ -515,6 +495,7 @@ function isTagPairSelected(pair, selectionStart, selectionEnd) {
     return wholeTag || onlyContent;
 }
 
+/* ---------- Editor ---------- */
 function isWordCharacter(character) {
     return character != null && /[\p{L}\p{N}]/u.test(character);
 }
@@ -541,8 +522,8 @@ function replaceEditorRange(start, end, text) {
 
     const value = editorInput.value;
     editorInput.value = value.slice(0, start) + text + value.slice(end);
-    computeText();
-    computeTemplate();
+    computeEditor();
+    computePreview();
 }
 
 function wrapEditorRange(start, end, tagValue) {
@@ -552,7 +533,7 @@ function wrapEditorRange(start, end, tagValue) {
 
     replaceEditorRange(start, end, tagOpen + content + tagSyntax.close);
     editorInput.setSelectionRange(contentStart, contentStart + content.length);
-    computeText();
+    computeEditor();
 }
 
 function moveCaretToMetadataValue(lineStart, key) {
@@ -561,7 +542,7 @@ function moveCaretToMetadataValue(lineStart, key) {
     editorInput.setSelectionRange(caret, caret);
     editorInput.scrollTop = 0;
     editorHighlight.scrollTop = 0;
-    computeText();
+    computeEditor();
 }
 
 function removeEditorTagPair(pair) {
@@ -569,9 +550,38 @@ function removeEditorTagPair(pair) {
 
     replaceEditorRange(pair.start, pair.end + 1, content);
     editorInput.setSelectionRange(pair.start, pair.start + content.length);
-    computeText();
+    computeEditor();
 }
 
+function computeEditor() {
+    editorContent = editorInput.value || null;
+
+    needsSaving = textFileContent !== editorContent;
+    textFilePathNeedsSaving.toggleAttribute("hidden", !needsSaving);
+
+    if (!editorContent) {
+        editorBody = null;
+        editorMetadata = null;
+        editorTagPairs = new Map();
+        lastHighlightState = null;
+        editorHighlight.innerHTML = "";
+        return;
+    }
+
+    const metadata = parseMetadata(editorContent);
+
+    editorMetadata = metadata;
+    editorBody = metadata ? editorContent.slice(metadata.rawLength) : editorContent;
+    editorTagPairs = getTagPairs(editorBody);
+
+    const caretPosition = getCaretPosition();
+    const highlightWindow = getHighlightWindow(caretPosition);
+
+    lastHighlightState = getHighlightState(caretPosition, highlightWindow);
+    renderHighlight(caretPosition, highlightWindow);
+}
+
+/* ---------- Rendering ---------- */
 function getClassAttribute(classes) {
     if (!Array.isArray(classes) || !classes.length) return "";
 
@@ -781,6 +791,7 @@ function renderBodyHtml() {
     return out.join("");
 }
 
+/* ---------- Highlight ---------- */
 function getCaretPosition() {
     return editorInput.selectionDirection === "backward"
         ? editorInput.selectionStart
@@ -805,25 +816,25 @@ function getHighlightWindow(caretPosition) {
     };
 }
 
-function getActiveTagRange(caretPosition) {
+function getHighlightState(caretPosition, highlightWindow) {
     const offset = getMetadataLength();
-    let innermost = null;
+    let activeTagRange = null;
 
     for (const [start, end] of editorTagPairs) {
         if (caretPosition <= offset + start || caretPosition > offset + end) {
             continue;
         }
 
-        if (!innermost || start > innermost.start) {
-            innermost = { start, end };
+        if (!activeTagRange || start > activeTagRange.start) {
+            activeTagRange = { start, end };
         }
     }
 
-    return innermost && `${innermost.start}-${innermost.end}`;
-}
+    const activeTagRangeKey = activeTagRange
+        ? `${activeTagRange.start}-${activeTagRange.end}`
+        : null;
 
-function getHighlightState(caretPosition, highlightWindow) {
-    return `${isMetadataActive(caretPosition)}|${getActiveTagRange(caretPosition)}|${highlightWindow.step}`;
+    return `${isMetadataActive(caretPosition)}|${activeTagRangeKey}|${highlightWindow.step}`;
 }
 
 function renderHighlight(caretPosition, highlightWindow) {
@@ -835,34 +846,6 @@ function renderHighlight(caretPosition, highlightWindow) {
 
     highlighted += highlightTags(caretPosition, highlightWindow);
     editorHighlight.innerHTML = highlighted;
-}
-
-function computeText() {
-    editorContent = editorInput.value || null;
-
-    needsSaving = textContent !== editorContent;
-    textFilePathNeedsSaving.toggleAttribute("hidden", !needsSaving);
-
-    if (!editorContent) {
-        editorBody = null;
-        editorMetadata = null;
-        editorTagPairs = new Map();
-        lastHighlightState = null;
-        editorHighlight.innerHTML = "";
-        return;
-    }
-
-    const metadata = parseMetadata(editorContent);
-
-    editorMetadata = metadata;
-    editorBody = getEditorBody(editorContent, metadata);
-    editorTagPairs = getTagPairs(editorBody);
-
-    const caretPosition = getCaretPosition();
-    const highlightWindow = getHighlightWindow(caretPosition);
-
-    lastHighlightState = getHighlightState(caretPosition, highlightWindow);
-    renderHighlight(caretPosition, highlightWindow);
 }
 
 function refreshHighlight() {
@@ -980,7 +963,8 @@ function highlightTags(caretPosition, highlightWindow) {
         + escapeHtml(editorBody.slice(highlightWindow.end));
 }
 
-function computeTemplate() {
+/* ---------- Preview ---------- */
+function computePreview() {
     clearTimeout(previewTimeout);
 
     let value = templateContent;
@@ -1001,7 +985,7 @@ function computeTemplate() {
     preview.srcdoc = value;
 }
 
-function computeTemplateSoon() {
+function computePreviewSoon() {
     clearTimeout(previewTimeout);
-    previewTimeout = setTimeout(computeTemplate, previewDebounceDelay);
+    previewTimeout = setTimeout(computePreview, previewDebounceDelay);
 }

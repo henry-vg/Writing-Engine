@@ -21,7 +21,7 @@ function handleDocumentClick() {
 }
 
 function handleDocumentKeyDown(e) {
-    if (e.key == "Escape") {
+    if (e.key === "Escape") {
         closeAllMenus();
 
         if (!dialogWrapper.hidden) {
@@ -37,7 +37,8 @@ function handleDocumentKeyDown(e) {
     if (!ctrlOrCmd) return;
 
     const key = e.key.toLowerCase();
-    const menuShortcut = getMenuShortcut(key, e.shiftKey);
+    const menuShortcut = optionsMenuItems.find((item) =>
+        item.shortcut === key && !!item.shift === e.shiftKey);
 
     if (menuShortcut) {
         e.preventDefault();
@@ -60,8 +61,8 @@ function handleDocumentSelectionChange() {
 }
 
 function handleEditorInputInput() {
-    computeText();
-    computeTemplateSoon();
+    computeEditor();
+    computePreviewSoon();
 }
 
 function handleEditorInputDoubleClick() {
@@ -81,7 +82,14 @@ function handleEditorInputDoubleClick() {
 
 function handleEditorInputContextMenu(e) {
     e.preventDefault();
-    openEditorContextMenu(e.clientX, e.clientY);
+    closeAllMenuDropdowns();
+    editorContextMenu.toggleAttribute("hidden", false);
+
+    const left = Math.min(e.clientX, window.innerWidth - editorContextMenu.offsetWidth);
+    const top = e.clientY - editorContextMenu.offsetHeight;
+
+    editorContextMenu.style.left = `${Math.max(0, left)}px`;
+    editorContextMenu.style.top = `${Math.max(0, top)}px`;
 }
 
 function handleEditorInputScroll() {
@@ -105,8 +113,7 @@ function handleFormattingButtonClick(tagValue) {
 
     if (selectionStart < metadataLength) return;
 
-    const body = getEditorBody(editorInput.value, editorMetadata);
-    const pairs = getTagPairsForKey(body, tagConfig.key, metadataLength);
+    const pairs = getTagPairsForKey(editorBody ?? "", tagConfig.key, metadataLength);
 
     const selectedPair = pairs.find((pair) => isTagPairSelected(pair, selectionStart, selectionEnd));
     if (selectedPair) {
@@ -139,19 +146,19 @@ function handleToggleThemeButtonClick() {
     const theme = document.documentElement.getAttribute("theme");
     const newTheme = theme === "dark" ? "light" : "dark";
     loadTheme(newTheme);
-    dbSet(DBThemeKey, newTheme);
+    dbSet(dbThemeKey, newTheme);
 }
 
 function handleToggleSpellcheckButtonClick() {
     const enabled = !editorInput.spellcheck;
     loadSpellcheck(enabled);
-    dbSet(DBSpellcheckKey, enabled);
+    dbSet(dbSpellcheckKey, enabled);
 }
 
 function handleTogglePreviewButtonClick() {
     const visible = preview.hidden;
     loadPreviewVisible(visible);
-    dbSet(DBPreviewVisibleKey, visible);
+    dbSet(dbPreviewVisibleKey, visible);
 }
 
 function handlePreviewLoad() {
@@ -161,7 +168,7 @@ function handlePreviewLoad() {
 function handleTogglePreviewNegativeButtonClick() {
     const negative = !preview.hasAttribute("negative");
     loadPreviewNegative(negative);
-    dbSet(DBPreviewNegativeKey, negative);
+    dbSet(dbPreviewNegativeKey, negative);
 }
 
 function handleEditMetadataButtonClick() {
@@ -214,8 +221,8 @@ async function handleOpenTextButtonClick() {
     const content = await (await handle.getFile()).text();
 
     textFileHandle = handle;
-    await dbSet(DBTextHandleKey, handle);
-    await dbSet(DBTextKey, { name: handle.name, content });
+    await dbSet(dbTextHandleKey, handle);
+    await dbSet(dbTextKey, { name: handle.name, content });
 
     loadTextFile(handle.name, content);
 }
@@ -237,8 +244,8 @@ async function handleCloseTextButtonClick() {
 
     if (!confirmed) return;
 
-    await dbDelete(DBTextKey);
-    await dbDelete(DBTextHandleKey);
+    await dbDelete(dbTextKey);
+    await dbDelete(dbTextHandleKey);
     closeTextFile();
 }
 
@@ -248,7 +255,7 @@ async function handleOpenTemplateButtonClick() {
     if (!handle) return;
 
     const content = await (await handle.getFile()).text();
-    await dbSet(DBTemplateKey, { name: handle.name, content });
+    await dbSet(dbTemplateKey, { name: handle.name, content });
 
     loadTemplateFile(handle.name, content);
 }
@@ -256,7 +263,7 @@ async function handleOpenTemplateButtonClick() {
 async function handleCloseTemplateButtonClick() {
     if (!await confirmAction(getFileMessage(closeFileMessage, templateFilePath.textContent))) return;
 
-    await dbDelete(DBTemplateKey);
+    await dbDelete(dbTemplateKey);
     closeTemplateFile();
 }
 
