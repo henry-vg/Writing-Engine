@@ -46,7 +46,7 @@ function handleDocumentKeyDown(e) {
         return;
     }
 
-    if (document.activeElement !== editorInput) return;
+    if (!editor.isFocused()) return;
 
     const tagConfig = getTagConfigByShortcut(key);
 
@@ -57,7 +57,7 @@ function handleDocumentKeyDown(e) {
 }
 
 function handleDocumentSelectionChange() {
-    if (document.activeElement === editorInput) refreshHighlight();
+    if (editor.isFocused()) refreshHighlight();
 }
 
 function handleEditorInputInput() {
@@ -67,15 +67,16 @@ function handleEditorInputInput() {
 
 function handleEditorInputDoubleClick() {
     requestAnimationFrame(() => {
-        const value = editorInput.value;
-        let start = editorInput.selectionStart;
-        let end = editorInput.selectionEnd;
+        const value = editor.getText();
+        const selection = editor.getMainSelection();
+        let start = selection.start;
+        let end = selection.end;
 
         while (start < end && /\s/.test(value[start])) start++;
         while (end > start && /\s/.test(value[end - 1])) end--;
 
-        if (start !== editorInput.selectionStart || end !== editorInput.selectionEnd) {
-            editorInput.setSelectionRange(start, end);
+        if (start !== selection.start || end !== selection.end) {
+            editor.setMainSelection(start, end);
         }
     });
 }
@@ -93,53 +94,11 @@ function handleEditorInputContextMenu(e) {
 }
 
 function handleEditorInputScroll() {
-    editorHighlight.scrollTop = editorInput.scrollTop;
-    editorHighlight.scrollLeft = editorInput.scrollLeft;
+    editor.syncHighlightScroll();
 }
 
 function handleFormattingButtonClick(tagValue) {
-    const tagConfig = getTagConfig(tagValue);
-
-    if (!tagConfig) {
-        showError(`there is no tag configured for "${tagValue}"`);
-        return;
-    }
-
-    editorInput.focus();
-
-    const metadataLength = getMetadataLength();
-    const selectionStart = editorInput.selectionStart;
-    const selectionEnd = editorInput.selectionEnd;
-
-    if (selectionStart < metadataLength) return;
-
-    const pairs = getTagPairsForKey(editorBody ?? "", tagConfig.key, metadataLength);
-
-    const selectedPair = pairs.find((pair) => isTagPairSelected(pair, selectionStart, selectionEnd));
-    if (selectedPair) {
-        removeEditorTagPair(selectedPair);
-        return;
-    }
-
-    if (selectionStart !== selectionEnd) {
-        wrapEditorRange(selectionStart, selectionEnd, tagValue);
-        return;
-    }
-
-    const word = getWordAt(editorInput.value, selectionStart);
-    if (word) {
-        const wordPair = pairs.find((pair) => pair.contentStart === word.start && pair.end === word.end);
-
-        if (wordPair) {
-            removeEditorTagPair(wordPair);
-            return;
-        }
-
-        wrapEditorRange(word.start, word.end, tagValue);
-        return;
-    }
-
-    wrapEditorRange(selectionStart, selectionStart, tagValue);
+    formatEditorSelection(tagValue);
 }
 
 function handleToggleThemeButtonClick() {
@@ -150,7 +109,7 @@ function handleToggleThemeButtonClick() {
 }
 
 function handleToggleSpellcheckButtonClick() {
-    const enabled = !editorInput.spellcheck;
+    const enabled = !editor.isSpellcheckEnabled();
     loadSpellcheck(enabled);
     dbSet(dbSpellcheckKey, enabled);
 }
@@ -172,28 +131,7 @@ function handleTogglePreviewNegativeButtonClick() {
 }
 
 function handleEditMetadataButtonClick() {
-    editorInput.focus();
-
-    const existingKeys = editorMetadata ? Object.keys(editorMetadata.parsed) : [];
-    const missingKeys = getTemplateMetadataKeys().filter((key) => !existingKeys.includes(key));
-    const lines = missingKeys.map(getMetadataLine).join("\n");
-    const fenceLine = `${metadataFence}\n`;
-
-    if (!editorMetadata) {
-        replaceEditorRange(0, 0, `${fenceLine}${lines}\n${fenceLine}`);
-        moveCaretToMetadataValue(fenceLine.length, missingKeys[0]);
-        return;
-    }
-
-    if (missingKeys.length) {
-        const insertAt = getMetadataLength() - metadataFence.length;
-
-        replaceEditorRange(insertAt, insertAt, `${lines}\n`);
-        moveCaretToMetadataValue(insertAt, missingKeys[0]);
-        return;
-    }
-
-    moveCaretToMetadataValue(fenceLine.length, null);
+    editEditorMetadata();
 }
 
 function handleMenuDropdownButtonClick(e, dropdown) {

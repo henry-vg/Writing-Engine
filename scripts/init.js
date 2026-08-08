@@ -1,12 +1,9 @@
-let editorContent = null;
-let editorMetadata = null;
-let editorBody = null;
+let editorDocument = createEmptyDocument();
 let textFileContent = null;
 let templateContent = null;
 let needsSaving = false;
 let textFileHandle = null;
 let dialogResolve = null;
-let editorTagPairs = new Map();
 let lastHighlightState = null;
 let previewVisible = defaultPreviewVisible;
 let previewTimeout = null;
@@ -29,7 +26,7 @@ let previewScroll = { x: 0, y: 0 };
 
 buildMenuItems();
 
-editorInput.focus();
+editor.focus();
 preview.toggleAttribute("hidden", true);
 
 computeEditor();
