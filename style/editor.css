@@ -15,7 +15,8 @@
     caret-color: var(--editor-caret-foreground-color);
 }
 
-.CodeMirror-scroll {
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar {
     scrollbar-width: thin;
     scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
 }
