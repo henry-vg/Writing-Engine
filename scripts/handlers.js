@@ -131,7 +131,7 @@ function handleToggleThemeButtonClick() {
 }
 
 function handleToggleSpellcheckButtonClick() {
-    const enabled = !editor.getWrapperElement().spellcheck;
+    const enabled = !editor.getOption("spellcheck");
     loadSpellcheck(enabled);
     dbSet(dbSpellcheckKey, enabled);
 }

@@ -30,6 +30,8 @@ const editorOptions = {
     mode: editorModeName,
     theme: "none",
     lineWrapping: true,
+    inputStyle: "contenteditable",
+    spellcheck: defaultSpellcheck,
 };
 
 const previewScrollbarClass = "__preview-iframe-scrollbar";
