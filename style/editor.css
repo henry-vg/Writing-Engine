@@ -12,6 +12,7 @@
     font-family: var(--editor-font-family);
     font-size: var(--editor-font-size);
     line-height: 1.4;
+    caret-color: var(--editor-caret-foreground-color);
 }
 
 .CodeMirror-scroll {
