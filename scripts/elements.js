@@ -1,4 +1,4 @@
-const editor = CodeMirror(document.getElementById("editorWrapper"));
+const editorWrapper = document.getElementById("editorWrapper");
 const preview = document.getElementById("preview");
 const previewScrollbarStyle = document.getElementById("preview-scrollbar-style");
 

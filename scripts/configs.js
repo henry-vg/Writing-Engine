@@ -23,6 +23,10 @@ const tagSyntax = {
 };
 const previewDebounceDelay = 250;
 
+const editorOptions = {
+    lineWrapping: true,
+};
+
 const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";

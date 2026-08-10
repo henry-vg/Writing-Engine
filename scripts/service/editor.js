@@ -72,3 +72,5 @@ function computeEditor() {
     editorBody = metadata ? editorContent.slice(metadata.rawLength) : editorContent;
     editorTagPairs = getTagPairs(editorBody);
 }
+
+const editor = CodeMirror(editorWrapper, editorOptions);
