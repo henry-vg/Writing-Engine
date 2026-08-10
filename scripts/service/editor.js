@@ -14,49 +14,47 @@ function getWordAt(value, index) {
     return { start, end };
 }
 
+function getEditorSelection() {
+    return {
+        start: editor.indexFromPos(editor.getCursor("from")),
+        end: editor.indexFromPos(editor.getCursor("to")),
+    };
+}
+
+function setEditorSelection(start, end) {
+    editor.setSelection(editor.posFromIndex(start), editor.posFromIndex(end));
+}
+
 function replaceEditorRange(start, end, text) {
-    editorInput.focus();
-    editorInput.setSelectionRange(start, end);
-
-    if (document.execCommand("insertText", false, text)) {
-        return;
-    }
-
-    const value = editorInput.value;
-    editorInput.value = value.slice(0, start) + text + value.slice(end);
-    computeEditor();
-    computePreview();
+    editor.focus();
+    editor.replaceRange(text, editor.posFromIndex(start), editor.posFromIndex(end));
 }
 
 function wrapEditorRange(start, end, tagValue) {
     const tagOpen = tagSyntax.open + tagValue + tagSyntax.separator;
-    const content = editorInput.value.slice(start, end);
+    const content = editor.getValue().slice(start, end);
     const contentStart = start + tagOpen.length;
 
     replaceEditorRange(start, end, tagOpen + content + tagSyntax.close);
-    editorInput.setSelectionRange(contentStart, contentStart + content.length);
-    computeEditor();
+    setEditorSelection(contentStart, contentStart + content.length);
 }
 
 function moveCaretToMetadataValue(lineStart, key) {
     const caret = lineStart + (key ? getMetadataLine(key).length : 0);
 
-    editorInput.setSelectionRange(caret, caret);
-    editorInput.scrollTop = 0;
-    editorHighlight.scrollTop = 0;
-    computeEditor();
+    setEditorSelection(caret, caret);
+    editor.scrollTo(0, 0);
 }
 
 function removeEditorTagPair(pair) {
-    const content = editorInput.value.slice(pair.contentStart, pair.end);
+    const content = editor.getValue().slice(pair.contentStart, pair.end);
 
     replaceEditorRange(pair.start, pair.end + 1, content);
-    editorInput.setSelectionRange(pair.start, pair.start + content.length);
-    computeEditor();
+    setEditorSelection(pair.start, pair.start + content.length);
 }
 
 function computeEditor() {
-    editorContent = editorInput.value || null;
+    editorContent = editor.getValue() || null;
 
     needsSaving = textFileContent !== editorContent;
     textFilePathNeedsSaving.toggleAttribute("hidden", !needsSaving);
@@ -65,8 +63,6 @@ function computeEditor() {
         editorBody = null;
         editorMetadata = null;
         editorTagPairs = new Map();
-        lastHighlightState = null;
-        editorHighlight.innerHTML = "";
         return;
     }
 
@@ -75,10 +71,4 @@ function computeEditor() {
     editorMetadata = metadata;
     editorBody = metadata ? editorContent.slice(metadata.rawLength) : editorContent;
     editorTagPairs = getTagPairs(editorBody);
-
-    const caretPosition = getCaretPosition();
-    const highlightWindow = getHighlightWindow(caretPosition);
-
-    lastHighlightState = getHighlightState(caretPosition, highlightWindow);
-    renderHighlight(caretPosition, highlightWindow);
 }

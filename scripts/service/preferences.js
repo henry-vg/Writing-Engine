@@ -17,6 +17,6 @@ function loadPreviewVisible(visible) {
 }
 
 function loadSpellcheck(enabled) {
-    editorInput.spellcheck = enabled;
+    editor.getWrapperElement().spellcheck = enabled;
     toggleSpellcheckButton.textContent = enabled ? disableSpellcheckMessage : enableSpellcheckMessage;
 }

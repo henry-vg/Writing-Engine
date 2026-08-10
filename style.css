@@ -43,14 +43,6 @@
 
     --preview-line-foreground-color: rgba(135, 135, 135, 1);
 
-    --tag-color: 130 0 0;
-    --tag-bracket-color: 5 50 250;
-    --metadata-dashes-color: 5 50 250;
-    --metadata-key-color: 5 80 165;
-    --metadata-value-color: 165 20 20;
-    --metadata-colon-color: 15 15 15;
-    --comment-color: 0 130 0;
-
     --selection-foreground-color: rgba(0, 0, 0, 1);
     --selection-background-color: rgba(180, 180, 180, 1);
 
@@ -80,14 +72,6 @@
     --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.25);
 
     --preview-line-foreground-color: rgba(186, 186, 186, 1);
-
-    --tag-color: 215 185 125;
-    --tag-bracket-color: 250 210 5;
-    --metadata-dashes-color: 250 210 5;
-    --metadata-key-color: 155 220 255;
-    --metadata-value-color: 205 145 120;
-    --metadata-colon-color: 180 180 180;
-    --comment-color: 105 155 85;
 
     --selection-background-color: rgba(180, 180, 180, 1);
     --selection-foreground-color: rgba(10, 10, 10, 1);
@@ -335,85 +319,29 @@ body:has(.preview[hidden]) .main-wrapper {
     flex: 1;
 }
 
-.editor-input,
-.editor-highlight {
+.CodeMirror {
     position: absolute;
     inset: 0;
-    margin: 0;
-    padding: 0;
-    overflow: auto;
-    scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.4;
+    height: auto;
+    background: var(--editor-background-color);
+    color: var(--editor-text-foreground-color);
     font-family: var(--editor-font-family);
     font-size: var(--editor-font-size);
+    line-height: 1.4;
 }
 
-.editor-input {
-    background: transparent;
-    color: transparent;
-    caret-color: var(--editor-caret-foreground-color);
-    border: 0;
-    resize: none;
-    outline: none;
+.CodeMirror-scroll {
+    scrollbar-width: thin;
     scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
 }
 
-.editor-highlight {
-    pointer-events: none;
-    color: var(--editor-text-foreground-color);
-    user-select: none;
-    scrollbar-color: transparent transparent;
+.CodeMirror-cursor {
+    border-left-color: var(--editor-caret-foreground-color);
 }
 
-.editor-highlight::after {
-    content: "\a";
-}
-
-/* ---------- Highlight ---------- */
-[class^="active-"] {
-    --alpha: 1;
-}
-
-[class^="inactive-"] {
-    --alpha: 0.5;
-}
-
-.active-tag,
-.inactive-tag {
-    color: rgb(var(--tag-color) / var(--alpha));
-}
-
-.active-tag-bracket,
-.inactive-tag-bracket {
-    color: rgb(var(--tag-bracket-color) / var(--alpha));
-}
-
-.active-metadata-dashes,
-.inactive-metadata-dashes {
-    color: rgb(var(--metadata-dashes-color) / var(--alpha));
-}
-
-.active-metadata-key,
-.inactive-metadata-key {
-    color: rgb(var(--metadata-key-color) / var(--alpha));
-}
-
-.active-metadata-value,
-.inactive-metadata-value {
-    color: rgb(var(--metadata-value-color) / var(--alpha));
-}
-
-.active-metadata-colon,
-.inactive-metadata-colon {
-    color: rgb(var(--metadata-colon-color) / var(--alpha));
-}
-
-.active-comment,
-.inactive-comment {
-    color: rgb(var(--comment-color) / var(--alpha));
+.CodeMirror-selected,
+.CodeMirror-focused .CodeMirror-selected {
+    background: var(--selection-background-color);
 }
 
 /* ---------- Dialogs ---------- */

@@ -8,6 +8,7 @@
     <link rel="icon" type="image/svg+xml"
         href="data:image/svg+xml,<svg viewBox='0 0 24 24'><path fill='white' d='M3 17.25V21h3.75L17.81 9.94l-3.75-3.75zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.996.996 0 0 0-1.41 0l-1.83 1.83 3.75 3.75z'/></svg>" />
 
+    <link rel="stylesheet" href="vendor/codemirror/lib/codemirror.css" />
     <link rel="stylesheet" href="style.css" />
 
     <style id="preview-scrollbar-style">
@@ -19,6 +20,8 @@
         }
     </style>
 
+    <script src="vendor/codemirror/lib/codemirror.js" defer></script>
+
     <script src="scripts/elements.js" defer></script>
     <script src="scripts/configs.js" defer></script>
     <script src="scripts/service/text.js" defer></script>
@@ -28,7 +31,6 @@
     <script src="scripts/service/indexed-db.js" defer></script>
     <script src="scripts/service/preferences.js" defer></script>
     <script src="scripts/service/rendering.js" defer></script>
-    <script src="scripts/service/highlight.js" defer></script>
     <script src="scripts/service/menus.js" defer></script>
     <script src="scripts/service/editor.js" defer></script>
     <script src="scripts/service/files.js" defer></script>
@@ -179,10 +181,7 @@
             </div>
         </header>
 
-        <div class="editor-wrapper">
-            <pre class="editor-highlight" id="editorHighlight"></pre>
-            <textarea class="editor-input" id="editorInput"></textarea>
-        </div>
+        <div class="editor-wrapper" id="editorWrapper"></div>
     </main>
 
     <iframe class="preview" id="preview" title="Preview"></iframe>

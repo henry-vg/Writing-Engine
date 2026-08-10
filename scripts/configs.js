@@ -23,9 +23,6 @@ const tagSyntax = {
 };
 const previewDebounceDelay = 250;
 
-const highlightWindowSize = 20000;
-const highlightWindowStep = 5000;
-
 const previewScrollbarClass = "__preview-iframe-scrollbar";
 const noTemplateFileMessage = "<No Template File>";
 const noTextFileMessage = "<No Text File>";

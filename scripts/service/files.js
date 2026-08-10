@@ -105,7 +105,7 @@ function loadTextFile(name, content) {
 
     textFilePath.textContent = name;
     closeTextButton.toggleAttribute("disabled", content === null);
-    editorInput.value = content ?? "";
+    editor.setValue(content ?? "");
     textFileContent = content || null;
     computeEditor();
     computePreview();
@@ -114,7 +114,7 @@ function loadTextFile(name, content) {
 function closeTextFile() {
     closeTextButton.toggleAttribute("disabled", true);
     textFilePath.textContent = noTextFileMessage;
-    editorInput.value = "";
+    editor.setValue("");
     textFileContent = null;
     textFileHandle = null;
     computeEditor();
@@ -122,7 +122,7 @@ function closeTextFile() {
 }
 
 async function writeTextFile() {
-    const content = editorInput.value;
+    const content = editor.getValue();
 
     if (!await writeFile(textFileHandle, content)) return false;
 

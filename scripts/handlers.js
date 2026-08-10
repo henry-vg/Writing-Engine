@@ -46,7 +46,7 @@ function handleDocumentKeyDown(e) {
         return;
     }
 
-    if (document.activeElement !== editorInput) return;
+    if (!editor.hasFocus()) return;
 
     const tagConfig = getTagConfigByShortcut(key);
 
@@ -56,31 +56,14 @@ function handleDocumentKeyDown(e) {
     handleFormattingButtonClick(tagConfig.values[0]);
 }
 
-function handleDocumentSelectionChange() {
-    if (document.activeElement === editorInput) refreshHighlight();
-}
+function handleEditorChange(change) {
+    if (change.origin === "setValue") return;
 
-function handleEditorInputInput() {
     computeEditor();
     computePreviewSoon();
 }
 
-function handleEditorInputDoubleClick() {
-    requestAnimationFrame(() => {
-        const value = editorInput.value;
-        let start = editorInput.selectionStart;
-        let end = editorInput.selectionEnd;
-
-        while (start < end && /\s/.test(value[start])) start++;
-        while (end > start && /\s/.test(value[end - 1])) end--;
-
-        if (start !== editorInput.selectionStart || end !== editorInput.selectionEnd) {
-            editorInput.setSelectionRange(start, end);
-        }
-    });
-}
-
-function handleEditorInputContextMenu(e) {
+function handleEditorContextMenu(e) {
     e.preventDefault();
     closeAllMenuDropdowns();
     editorContextMenu.toggleAttribute("hidden", false);
@@ -92,11 +75,6 @@ function handleEditorInputContextMenu(e) {
     editorContextMenu.style.top = `${Math.max(0, top)}px`;
 }
 
-function handleEditorInputScroll() {
-    editorHighlight.scrollTop = editorInput.scrollTop;
-    editorHighlight.scrollLeft = editorInput.scrollLeft;
-}
-
 function handleFormattingButtonClick(tagValue) {
     const tagConfig = getTagConfig(tagValue);
 
@@ -105,11 +83,10 @@ function handleFormattingButtonClick(tagValue) {
         return;
     }
 
-    editorInput.focus();
+    editor.focus();
 
     const metadataLength = getMetadataLength();
-    const selectionStart = editorInput.selectionStart;
-    const selectionEnd = editorInput.selectionEnd;
+    const { start: selectionStart, end: selectionEnd } = getEditorSelection();
 
     if (selectionStart < metadataLength) return;
 
@@ -126,7 +103,7 @@ function handleFormattingButtonClick(tagValue) {
         return;
     }
 
-    const word = getWordAt(editorInput.value, selectionStart);
+    const word = getWordAt(editor.getValue(), selectionStart);
     if (word) {
         const wordPair = pairs.find((pair) => pair.contentStart === word.start && pair.end === word.end);
 
@@ -150,7 +127,7 @@ function handleToggleThemeButtonClick() {
 }
 
 function handleToggleSpellcheckButtonClick() {
-    const enabled = !editorInput.spellcheck;
+    const enabled = !editor.getWrapperElement().spellcheck;
     loadSpellcheck(enabled);
     dbSet(dbSpellcheckKey, enabled);
 }
@@ -172,7 +149,7 @@ function handleTogglePreviewNegativeButtonClick() {
 }
 
 function handleEditMetadataButtonClick() {
-    editorInput.focus();
+    editor.focus();
 
     const existingKeys = editorMetadata ? Object.keys(editorMetadata.parsed) : [];
     const missingKeys = getTemplateMetadataKeys().filter((key) => !existingKeys.includes(key));

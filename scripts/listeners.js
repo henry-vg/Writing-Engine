@@ -6,12 +6,8 @@ window.addEventListener("unhandledrejection", (e) => handleWindowUnhandledReject
 document.addEventListener("click", () => handleDocumentClick());
 document.addEventListener("keydown", (e) => handleDocumentKeyDown(e));
 
-document.addEventListener("selectionchange", () => handleDocumentSelectionChange());
-
-editorInput.addEventListener("input", () => handleEditorInputInput());
-editorInput.addEventListener("dblclick", () => handleEditorInputDoubleClick());
-editorInput.addEventListener("scroll", () => handleEditorInputScroll());
-editorInput.addEventListener("contextmenu", (e) => handleEditorInputContextMenu(e));
+editor.on("change", (instance, change) => handleEditorChange(change));
+editor.getWrapperElement().addEventListener("contextmenu", (e) => handleEditorContextMenu(e));
 
 for (const { button, tagValue } of buildTagButtons()) {
     button.addEventListener("click", () => handleFormattingButtonClick(tagValue));
