@@ -1,5 +1,5 @@
 function isWordCharacter(character) {
-    return character != null && /[\p{L}\p{N}]/u.test(character);
+    return character != null && wordCharacters.test(character);
 }
 
 function getWordAt(value, index) {

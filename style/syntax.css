@@ -39,3 +39,7 @@
 .cm-metadata-value {
     color: rgb(var(--metadata-value-color) / var(--alpha));
 }
+
+.cm-match-highlight {
+    background: var(--match-highlight-background-color);
+}

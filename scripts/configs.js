@@ -27,6 +27,8 @@ const previewDebounceDelay = 250;
 
 const editorModeName = "writing-engine";
 const activeMarkClass = "cm-active";
+const matchHighlightClass = "match-highlight";
+const wordCharacters = /[\p{L}\p{N}]/u;
 
 const editorShortcuts = {
     "Shift-Alt-Up": "duplicateLineUp",
@@ -44,6 +46,10 @@ const editorOptions = {
     lineWrapping: true,
     inputStyle: "contenteditable",
     spellcheck: defaultSpellcheck,
+    highlightSelectionMatches: {
+        showToken: wordCharacters,
+        style: matchHighlightClass,
+    },
 };
 
 const previewScrollbarClass = "__preview-iframe-scrollbar";
