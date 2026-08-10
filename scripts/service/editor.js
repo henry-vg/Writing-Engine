@@ -138,7 +138,7 @@ function getEditorExtraKeys() {
     return extraKeys;
 }
 
-const editor = CodeMirror(editorWrapper, {
+const editor = CodeMirror(editorElement, {
     ...editorOptions,
     extraKeys: getEditorExtraKeys(),
     configureMouse: configureEditorMouse,

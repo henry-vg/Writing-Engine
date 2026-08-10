@@ -1,4 +1,4 @@
-const editorWrapper = document.getElementById("editorWrapper");
+const editorElement = document.getElementById("editor");
 const preview = document.getElementById("preview");
 const previewScrollbarStyle = document.getElementById("preview-scrollbar-style");
 
