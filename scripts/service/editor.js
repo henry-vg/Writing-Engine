@@ -14,6 +14,16 @@ function getWordAt(value, index) {
     return { start, end };
 }
 
+function getWordAroundCaret(value, index) {
+    let start = index;
+    let end = index;
+
+    while (start > 0 && isWordCharacter(value[start - 1])) start--;
+    while (end < value.length && isWordCharacter(value[end])) end++;
+
+    return start < end ? { start, end } : null;
+}
+
 function getEditorSelection() {
     return {
         start: editor.indexFromPos(editor.getCursor("from")),
@@ -138,6 +148,25 @@ CodeMirror.commands.deleteLines = (instance) => {
             return { anchor: position, head: position };
         }));
     });
+};
+
+CodeMirror.commands.selectAllOccurrences = (instance) => {
+    const text = instance.getValue();
+    const word = getWordAroundCaret(text, instance.indexFromPos(instance.getCursor("head")));
+
+    if (!word) return;
+
+    const boundary = wordCharacters.source;
+    const query = new RegExp(
+        `(?<!${boundary})${text.slice(word.start, word.end)}(?!${boundary})`, "gu");
+
+    const ranges = [...text.matchAll(query)].map((match) => ({
+        anchor: instance.posFromIndex(match.index),
+        head: instance.posFromIndex(match.index + match[0].length),
+    }));
+
+    instance.setSelections(ranges, ranges.findIndex((range) =>
+        instance.indexFromPos(range.anchor) === word.start));
 };
 
 function getAppShortcutKeys() {
