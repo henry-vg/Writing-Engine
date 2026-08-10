@@ -31,6 +31,8 @@ const editorShortcuts = {
     "Shift-Ctrl-K": "deleteLine",
     "Ctrl-Alt-Down": "addCursorBelow",
     "Ctrl-Alt-Up": "addCursorAbove",
+    "Shift-Alt-Down": "addCursorBelow",
+    "Shift-Alt-Up": "addCursorAbove",
 };
 
 const disabledEditorShortcuts = ["Ctrl-D"];
