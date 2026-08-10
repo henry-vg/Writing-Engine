@@ -86,9 +86,9 @@ function addCursor(instance, direction) {
     const heads = instance.listSelections().map((range) => range.head);
 
     const edge = heads.reduce((furthest, head) =>
-        (head.line - furthest.line) * direction > 0 ? head : furthest);
+        CodeMirror.cmpPos(head, furthest) * direction > 0 ? head : furthest);
     const origin = heads.reduce((furthest, head) =>
-        (head.line - furthest.line) * direction < 0 ? head : furthest);
+        CodeMirror.cmpPos(head, furthest) * direction < 0 ? head : furthest);
 
     const goalColumn = instance.cursorCoords(origin, "div").left;
     const position = instance.findPosV(edge, direction, "line", goalColumn);
