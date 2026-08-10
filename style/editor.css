@@ -20,6 +20,10 @@
     scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
 }
 
+.CodeMirror-crosshair {
+    cursor: text;
+}
+
 .CodeMirror-cursor {
     border-left-color: var(--editor-caret-foreground-color);
 }
