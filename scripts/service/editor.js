@@ -123,6 +123,23 @@ function duplicateLines(instance, direction) {
 CodeMirror.commands.duplicateLineUp = (instance) => duplicateLines(instance, -1);
 CodeMirror.commands.duplicateLineDown = (instance) => duplicateLines(instance, 1);
 
+CodeMirror.commands.deleteLines = (instance) => {
+    const heads = instance.listSelections().map((range) => range.head);
+    const lines = [...new Set(heads.map((head) => head.line))];
+
+    instance.operation(() => {
+        CodeMirror.commands.deleteLine(instance);
+
+        instance.setSelections(heads.map((head) => {
+            const deletedAbove = lines.filter((line) => line < head.line).length;
+            const line = Math.min(head.line - deletedAbove, instance.lastLine());
+            const position = { line, ch: Math.min(head.ch, instance.getLine(line).length) };
+
+            return { anchor: position, head: position };
+        }));
+    });
+};
+
 function getAppShortcutKeys() {
     const buttonConfigs = [...Object.values(tags).map((tagConfig) => tagConfig.button), ...optionsMenuItems];
 
