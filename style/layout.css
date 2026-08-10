@@ -1,0 +1,40 @@
+.main-wrapper {
+    width: 600px;
+    min-width: 295px;
+    max-width: calc(var(--page-width) - var(--spacing) - var(--preview-min-width));
+    height: var(--pane-height);
+    background: var(--editor-background-color);
+    border: 1px solid var(--editor-line-foreground-color);
+    border-radius: var(--border-radius) var(--border-radius) 0 var(--border-radius);
+    padding: var(--spacing);
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    resize: horizontal;
+    overflow: hidden;
+    transition: background-color var(--transition-duration);
+}
+
+.preview {
+    height: var(--pane-height);
+    min-width: var(--preview-min-width);
+    flex-grow: 1;
+    flex-shrink: 1;
+    background: rgb(255, 255, 255);
+    border: 1px solid var(--preview-line-foreground-color);
+    border-radius: var(--border-radius);
+    padding: var(--spacing);
+    transition: filter var(--transition-duration);
+}
+
+.preview[negative] {
+    filter: invert(1) grayscale(1) contrast(0.725);
+}
+
+body:has(.preview[hidden]) {
+    justify-content: center;
+}
+
+body:has(.preview[hidden]) .main-wrapper {
+    max-width: var(--page-width);
+}

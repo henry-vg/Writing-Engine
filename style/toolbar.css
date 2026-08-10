@@ -1,0 +1,63 @@
+.toolbar {
+    display: flex;
+    gap: var(--spacing-small);
+    height: var(--toolbar-height);
+    padding-bottom: var(--spacing);
+    margin-bottom: var(--spacing);
+    border-bottom: 1px solid var(--editor-line-foreground-color);
+    min-width: 0;
+}
+
+.file-paths {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.file-path-wrapper {
+    display: inline-flex;
+}
+
+.text-file-path,
+.template-file-path,
+.file-path-title,
+.text-file-path-needs-saving {
+    color: var(--editor-text-foreground-color);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    user-select: none;
+}
+
+.text-file-path,
+.template-file-path,
+.file-path-title {
+    font-weight: normal;
+    letter-spacing: 0.25px;
+    text-overflow: ellipsis;
+    font-style: italic;
+}
+
+.text-file-path-needs-saving {
+    font-weight: bold;
+    margin-left: calc(var(--spacing) / 3);
+}
+
+.file-path-title {
+    font-style: normal;
+    font-weight: bold;
+    margin-right: var(--spacing-small);
+}
+
+.divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--editor-line-foreground-color);
+}
+
+.dropdown__divider {
+    height: 1px;
+    align-self: stretch;
+    background: var(--dropdown-line-foreground-color);
+}

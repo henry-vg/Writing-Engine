@@ -1,0 +1,41 @@
+.menu-dropdown,
+.editor-context-menu {
+    padding: var(--spacing);
+    display: flex;
+    gap: var(--spacing-small);
+    background: var(--dropdown-background-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--dropdown-shadow);
+    z-index: var(--z-menu);
+}
+
+.menu-dropdown[hidden],
+.editor-context-menu[hidden] {
+    display: none;
+}
+
+.menu {
+    display: flex;
+    gap: var(--spacing-small);
+    min-width: 0;
+    position: relative;
+    height: 100%;
+}
+
+.menu-dropdown {
+    position: absolute;
+    top: calc(100% + var(--spacing));
+    right: 0;
+    min-width: 175px;
+    flex-direction: column;
+}
+
+.editor-context-menu {
+    position: fixed;
+    align-items: center;
+}
+
+.context-menu-tag-buttons {
+    display: flex;
+    gap: var(--spacing-small);
+}

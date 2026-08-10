@@ -1,0 +1,49 @@
+.button,
+.menu-item {
+    border: 0;
+    border-radius: var(--border-radius);
+    background: transparent;
+    cursor: pointer;
+    user-select: none;
+}
+
+.button:disabled,
+.menu-item:disabled {
+    cursor: default;
+}
+
+.button {
+    width: calc(var(--toolbar-height) * 0.75);
+    padding: 0;
+    display: grid;
+    place-items: center;
+    color: var(--editor-button-foreground-color);
+    outline: none;
+    transition: background-color var(--transition-duration);
+}
+
+.button:hover:not(:disabled) {
+    background: var(--editor-button-hover-background-color);
+}
+
+.button:disabled {
+    color: var(--editor-button-disabled-foreground-color);
+}
+
+.button svg path {
+    fill: currentColor;
+}
+
+.menu-item {
+    padding: var(--spacing);
+    color: var(--dropdown-button-foreground-color);
+    text-align: left;
+}
+
+.menu-item:hover:not(:disabled) {
+    background: var(--dropdown-button-hover-background-color);
+}
+
+.menu-item:disabled {
+    color: var(--dropdown-button-disabled-foreground-color);
+}

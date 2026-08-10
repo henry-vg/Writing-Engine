@@ -1,0 +1,28 @@
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0 var(--spacing);
+    background: var(--background-color);
+    font-family: var(--font-family);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing);
+    transition: background-color var(--transition-duration);
+    overflow: hidden;
+}
+
+::selection {
+    color: var(--selection-foreground-color);
+    background: var(--selection-background-color);
+}

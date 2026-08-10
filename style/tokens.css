@@ -1,0 +1,21 @@
+:root {
+    --spacing: 8px;
+    --spacing-small: calc(var(--spacing) / 2);
+    --border-radius: 5px;
+    --toolbar-height: 32px;
+
+    --font-family: "roboto", "arial", "sans-serif";
+    --editor-font-family: "Consolas", "Courier New", "Courier", "monospace";
+    --editor-font-size: 14px;
+
+    --pane-height: calc(100vh - 2 * var(--spacing));
+    --page-width: calc(100vw - 2 * var(--spacing));
+    --preview-min-width: 350px;
+
+    --transition-duration: 0.25s;
+    --dialog-wrapper-backdrop-filter: blur(7.5px) brightness(0.5);
+
+    --z-menu: 1000;
+    --z-dialog-wrapper: 999;
+    --z-dialog: 1000;
+}

@@ -1,0 +1,29 @@
+.editor-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+.CodeMirror {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    background: var(--editor-background-color);
+    color: var(--editor-text-foreground-color);
+    font-family: var(--editor-font-family);
+    font-size: var(--editor-font-size);
+    line-height: 1.4;
+}
+
+.CodeMirror-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
+}
+
+.CodeMirror-cursor {
+    border-left-color: var(--editor-caret-foreground-color);
+}
+
+.CodeMirror-selected,
+.CodeMirror-focused .CodeMirror-selected {
+    background: var(--selection-background-color);
+}

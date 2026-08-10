@@ -1,0 +1,59 @@
+:root[theme="light"] {
+    --background-color: rgba(255, 255, 255, 1);
+
+    --editor-background-color: rgba(255, 255, 255, 1);
+    --editor-line-foreground-color: rgba(135, 135, 135, 1);
+    --editor-text-foreground-color: rgba(15, 15, 15, 1);
+    --editor-button-foreground-color: rgba(45, 45, 45, 1);
+    --editor-button-disabled-foreground-color: rgba(45, 45, 45, 0.5);
+    --editor-button-hover-background-color: rgba(200, 200, 200, 1);
+    --editor-caret-foreground-color: rgba(0, 0, 0, 1);
+    --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
+
+    --dropdown-background-color: rgba(245, 245, 245, 1);
+    --dropdown-button-foreground-color: rgba(15, 15, 15, 1);
+    --dropdown-button-disabled-foreground-color: rgba(15, 15, 15, 0.5);
+    --dropdown-button-hover-background-color: rgba(200, 200, 200, 1);
+    --dropdown-line-foreground-color: rgba(165, 165, 165, 1);
+    --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
+
+    --preview-line-foreground-color: rgba(135, 135, 135, 1);
+
+    --selection-foreground-color: rgba(0, 0, 0, 1);
+    --selection-background-color: rgba(180, 180, 180, 1);
+
+    --dialog-background-color: rgba(245, 245, 245, 1);
+    --dialog-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.2);
+    --dialog-text-foreground-color: rgba(15, 15, 15, 1);
+    --dialog-wrapper-background-color: rgba(0, 0, 0, 0.25);
+}
+
+:root[theme="dark"] {
+    --background-color: rgba(30, 30, 30, 1);
+
+    --editor-background-color: rgba(35, 35, 35, 1);
+    --editor-line-foreground-color: rgba(85, 85, 85, 1);
+    --editor-text-foreground-color: rgba(180, 180, 180, 1);
+    --editor-button-foreground-color: rgba(180, 180, 180, 1);
+    --editor-button-disabled-foreground-color: rgba(180, 180, 180, 0.5);
+    --editor-button-hover-background-color: rgba(85, 85, 85, 1);
+    --editor-caret-foreground-color: rgba(220, 220, 220, 1);
+    --editor-scrollbar-foreground-color: rgba(85, 85, 85, 1);
+
+    --dropdown-background-color: rgba(50, 50, 50, 1);
+    --dropdown-button-foreground-color: rgba(180, 180, 180, 1);
+    --dropdown-button-disabled-foreground-color: rgba(180, 180, 180, 0.5);
+    --dropdown-button-hover-background-color: rgba(85, 85, 85, 1);
+    --dropdown-line-foreground-color: rgba(85, 85, 85, 1);
+    --dropdown-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.25);
+
+    --preview-line-foreground-color: rgba(186, 186, 186, 1);
+
+    --selection-background-color: rgba(180, 180, 180, 1);
+    --selection-foreground-color: rgba(10, 10, 10, 1);
+
+    --dialog-background-color: rgba(50, 50, 50, 1);
+    --dialog-shadow: 0px 0px 15px 0px rgba(0, 0, 0, 0.25);
+    --dialog-text-foreground-color: rgba(180, 180, 180, 1);
+    --dialog-wrapper-background-color: rgba(0, 0, 0, 0.25);
+}
