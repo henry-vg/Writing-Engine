@@ -29,7 +29,14 @@
     border-left-color: var(--editor-caret-foreground-color);
 }
 
+.CodeMirror-line::selection,
+.CodeMirror-line > span::selection,
+.CodeMirror-line > span > span::selection {
+    color: var(--selection-foreground-color);
+    background: var(--selection-background-color);
+}
+
 .CodeMirror-selected,
 .CodeMirror-focused .CodeMirror-selected {
-    background: var(--editor-selection-background-color);
+    background: var(--selection-background-color);
 }
