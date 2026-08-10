@@ -25,5 +25,5 @@
 
 .CodeMirror-selected,
 .CodeMirror-focused .CodeMirror-selected {
-    background: var(--selection-background-color);
+    background: var(--editor-selection-background-color);
 }
