@@ -27,12 +27,11 @@ const editorModeName = "writing-engine";
 const activeMarkClass = "cm-active";
 
 const editorShortcuts = {
-    "Shift-Ctrl-Down": "duplicateLine",
+    "Shift-Alt-Up": "duplicateLineUp",
+    "Shift-Alt-Down": "duplicateLineDown",
     "Shift-Ctrl-K": "deleteLine",
-    "Ctrl-Alt-Down": "addCursorBelow",
     "Ctrl-Alt-Up": "addCursorAbove",
-    "Shift-Alt-Down": "addCursorBelow",
-    "Shift-Alt-Up": "addCursorAbove",
+    "Ctrl-Alt-Down": "addCursorBelow",
 };
 
 const disabledEditorShortcuts = ["Ctrl-D"];

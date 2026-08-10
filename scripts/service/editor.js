@@ -101,22 +101,27 @@ function addCursor(instance, direction) {
 CodeMirror.commands.addCursorBelow = (instance) => addCursor(instance, 1);
 CodeMirror.commands.addCursorAbove = (instance) => addCursor(instance, -1);
 
-CodeMirror.commands.duplicateLine = (instance) => {
-    const lines = [...new Set(instance.listSelections().map((range) => range.head.line))];
+function duplicateLines(instance, direction) {
+    const heads = instance.listSelections().map((range) => range.head);
+    const lines = [...new Set(heads.map((head) => head.line))].sort((a, b) => a - b);
 
     instance.operation(() => {
-        for (const line of lines.sort((a, b) => b - a)) {
-            const text = instance.getLine(line);
-
-            instance.replaceRange(`\n${text}`, { line, ch: text.length });
+        for (const line of [...lines].reverse()) {
+            instance.replaceRange(`${instance.getLine(line)}\n`, { line, ch: 0 });
         }
 
-        instance.setSelections(instance.listSelections().map((range) => ({
-            anchor: { line: range.anchor.line + 1, ch: range.anchor.ch },
-            head: { line: range.head.line + 1, ch: range.head.ch },
-        })));
+        instance.setSelections(heads.map((head) => {
+            const copies = lines.filter((line) => line <= head.line).length;
+            const line = head.line + copies - (direction > 0 ? 0 : 1);
+            const position = { line, ch: head.ch };
+
+            return { anchor: position, head: position };
+        }));
     });
-};
+}
+
+CodeMirror.commands.duplicateLineUp = (instance) => duplicateLines(instance, -1);
+CodeMirror.commands.duplicateLineDown = (instance) => duplicateLines(instance, 1);
 
 function getAppShortcutKeys() {
     const buttonConfigs = [...Object.values(tags).map((tagConfig) => tagConfig.button), ...optionsMenuItems];
