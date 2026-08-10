@@ -39,3 +39,10 @@
     display: flex;
     gap: var(--spacing-small);
 }
+
+.menu-dropdown-scrollable {
+    max-height: 50vh;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--editor-scrollbar-foreground-color) transparent;
+}

@@ -17,6 +17,10 @@ const dialogSaveButton = document.getElementById("dialog-save-button");
 const dialogProceedButton = document.getElementById("dialog-proceed-button");
 const dialogCancelButton = document.getElementById("dialog-cancel-button");
 
+const fontButton = document.getElementById("font-button");
+const fontDropdown = document.getElementById("font-dropdown");
+const fontMeasureCanvas = document.createElement("canvas");
+
 const toggleThemeButton = document.getElementById("toggle-theme-button");
 const toggleSpellcheckButton = document.getElementById("toggle-spellcheck-button");
 const togglePreviewButton = document.getElementById("toggle-preview-button");

@@ -7,10 +7,12 @@ const dbThemeKey = "theme";
 const dbPreviewVisibleKey = "preview-visible";
 const dbPreviewNegativeKey = "preview-negative";
 const dbSpellcheckKey = "spellcheck";
+const dbFontKey = "font";
 const defaultTheme = "dark";
 const defaultPreviewVisible = true;
 const defaultPreviewNegative = false;
 const defaultSpellcheck = false;
+const defaultFont = "Consolas";
 const defaultTextFileName = "text.txt";
 const templateBodyKey = "body";
 const metadataFence = "---";
@@ -207,6 +209,7 @@ const tags = {
 };
 
 const menuElements = [
+    { button: fontButton, dropdown: fontDropdown },
     { button: titlesButton, dropdown: titlesDropdown },
     { button: optionsButton, dropdown: optionsDropdown },
 ];
@@ -223,6 +226,21 @@ const optionsMenuItems = [
     { id: "toggle-spellcheck-button", tooltip: "Toggle Spellcheck" },
     { id: "clear-data-button", label: "Clear Stored Data..." },
     { id: "help-button", label: "Help" },
+];
+
+const fontMeasureText = "mmmmmmmmmmlliWWWWWWWW1234567890";
+const fontMeasureSize = "72px";
+const fontMeasureFallbacks = ["monospace", "sans-serif"];
+
+const fontCandidates = [
+    "Arial", "Arial Black", "Bahnschrift", "Baskerville Old Face", "Bookman Old Style",
+    "Cambria", "Candara", "Cascadia Code", "Cascadia Mono", "Centaur", "Century Gothic",
+    "Comic Sans MS", "Consolas", "Constantia", "Corbel", "Courier New", "DejaVu Sans Mono",
+    "Ebrima", "Fira Code", "Franklin Gothic Medium", "Gabriola", "Garamond", "Georgia",
+    "Gill Sans MT", "Helvetica", "Impact", "Ink Free", "Iosevka", "JetBrains Mono",
+    "Lucida Console", "Lucida Sans Unicode", "Menlo", "Monaco", "Palatino Linotype",
+    "Perpetua", "Rockwell", "Segoe Print", "Segoe Script", "Segoe UI", "Sitka Text",
+    "Source Code Pro", "Sylfaen", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana",
 ];
 
 const tagButtonContainers = {

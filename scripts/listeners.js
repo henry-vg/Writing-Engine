@@ -22,6 +22,10 @@ togglePreviewNegativeButton.addEventListener("click", () => handleTogglePreviewN
 
 editMetadataButton.addEventListener("click", () => handleEditMetadataButtonClick());
 
+for (const { button, family } of buildFontItems()) {
+    button.addEventListener("click", () => handleFontItemClick(family));
+}
+
 for (const { button, dropdown } of menuElements) {
     button.addEventListener("click", (e) => handleMenuDropdownButtonClick(e, dropdown));
 }

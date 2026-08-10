@@ -123,6 +123,12 @@ function handleFormattingButtonClick(tagValue) {
     wrapEditorRange(selectionStart, selectionStart, tagValue);
 }
 
+function handleFontItemClick(family) {
+    loadFont(family);
+    dbSet(dbFontKey, family);
+    closeAllMenus();
+}
+
 function handleToggleThemeButtonClick() {
     const theme = document.documentElement.getAttribute("theme");
     const newTheme = theme === "dark" ? "light" : "dark";
@@ -267,6 +273,7 @@ async function handleClearDataButtonClick() {
     loadPreviewVisible(defaultPreviewVisible);
     loadPreviewNegative(defaultPreviewNegative);
     loadSpellcheck(defaultSpellcheck);
+    loadFont(defaultFont);
 }
 
 function handleHelpButtonClick() {

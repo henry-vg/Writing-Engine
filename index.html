@@ -41,6 +41,7 @@
     <script src="scripts/service/preferences.js" defer></script>
     <script src="scripts/service/rendering.js" defer></script>
     <script src="scripts/service/menus.js" defer></script>
+    <script src="scripts/service/fonts.js" defer></script>
     <script src="scripts/service/highlight.js" defer></script>
     <script src="scripts/service/editor.js" defer></script>
     <script src="scripts/service/files.js" defer></script>
@@ -127,6 +128,18 @@
             </div>
 
             <span class="divider"></span>
+
+            <div class="menu">
+                <button class="button" type="button" title="Font" id="font-button">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M5.49 19h2.42l1.27-3.58h5.65L16.09 19h2.42L13.25 5h-2.5zm4.42-5.61L11.94 7.6h.12l2.03 5.79">
+                        </path>
+                    </svg>
+                </button>
+
+                <div class="menu-dropdown menu-dropdown-scrollable" id="font-dropdown" hidden></div>
+            </div>
 
             <button class="button" type="button" title="Toggle Theme" id="toggle-theme-button">
                 <svg viewBox="0 0 24 24">

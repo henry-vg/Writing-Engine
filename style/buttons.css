@@ -47,3 +47,7 @@
 .menu-item:disabled {
     color: var(--dropdown-button-disabled-foreground-color);
 }
+
+.menu-item[selected] {
+    background: var(--dropdown-button-hover-background-color);
+}

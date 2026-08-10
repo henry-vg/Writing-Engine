@@ -26,6 +26,7 @@ let previewScroll = { x: 0, y: 0 };
     loadPreviewVisible(await dbGet(dbPreviewVisibleKey) ?? defaultPreviewVisible);
     loadPreviewNegative(await dbGet(dbPreviewNegativeKey) ?? defaultPreviewNegative);
     loadSpellcheck(await dbGet(dbSpellcheckKey) ?? defaultSpellcheck);
+    loadFont(await dbGet(dbFontKey) ?? defaultFont);
 })();
 
 buildMenuItems();
