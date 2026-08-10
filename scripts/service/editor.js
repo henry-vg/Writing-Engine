@@ -83,20 +83,19 @@ function configureEditorMouse(instance, repeat, event) {
 }
 
 function addCursor(instance, direction) {
-    const ranges = instance.listSelections();
-    const heads = ranges.map((range) => range.head);
+    const heads = instance.listSelections().map((range) => range.head);
 
-    const edge = direction > 0
-        ? heads.reduce((furthest, head) => (head.line > furthest.line ? head : furthest))
-        : heads.reduce((furthest, head) => (head.line < furthest.line ? head : furthest));
+    const edge = heads.reduce((furthest, head) =>
+        (head.line - furthest.line) * direction > 0 ? head : furthest);
+    const origin = heads.reduce((furthest, head) =>
+        (head.line - furthest.line) * direction < 0 ? head : furthest);
 
-    const line = edge.line + direction;
+    const goalColumn = instance.cursorCoords(origin, "div").left;
+    const position = instance.findPosV(edge, direction, "line", goalColumn);
 
-    if (line < instance.firstLine() || line > instance.lastLine()) return;
+    if (position.hitSide) return;
 
-    const position = { line, ch: Math.min(edge.ch, instance.getLine(line).length) };
-
-    instance.setSelections([...ranges, { anchor: position, head: position }], ranges.length);
+    instance.addSelection(position);
 }
 
 CodeMirror.commands.addCursorBelow = (instance) => addCursor(instance, 1);
