@@ -56,6 +56,10 @@ function handleDocumentKeyDown(e) {
     handleFormattingButtonClick(tagConfig.values[0]);
 }
 
+function handleEditorCursorActivity() {
+    refreshActiveMark();
+}
+
 function handleEditorChange(change) {
     if (change.origin === "setValue") return;
 

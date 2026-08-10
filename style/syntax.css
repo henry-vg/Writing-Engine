@@ -1,0 +1,41 @@
+.cm-tag,
+.cm-tag-bracket,
+.cm-comment,
+.cm-metadata-dashes,
+.cm-metadata-key,
+.cm-metadata-colon,
+.cm-metadata-value {
+    --alpha: 0.5;
+}
+
+.cm-active {
+    --alpha: 1;
+}
+
+.cm-tag {
+    color: rgb(var(--tag-color) / var(--alpha));
+}
+
+.cm-tag-bracket {
+    color: rgb(var(--tag-bracket-color) / var(--alpha));
+}
+
+.cm-comment {
+    color: rgb(var(--comment-color) / var(--alpha));
+}
+
+.cm-metadata-dashes {
+    color: rgb(var(--metadata-dashes-color) / var(--alpha));
+}
+
+.cm-metadata-key {
+    color: rgb(var(--metadata-key-color) / var(--alpha));
+}
+
+.cm-metadata-colon {
+    color: rgb(var(--metadata-colon-color) / var(--alpha));
+}
+
+.cm-metadata-value {
+    color: rgb(var(--metadata-value-color) / var(--alpha));
+}

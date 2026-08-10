@@ -23,7 +23,12 @@ const tagSyntax = {
 };
 const previewDebounceDelay = 250;
 
+const editorModeName = "writing-engine";
+const activeMarkClass = "cm-active";
+
 const editorOptions = {
+    mode: editorModeName,
+    theme: "none",
     lineWrapping: true,
 };
 

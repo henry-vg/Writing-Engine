@@ -55,6 +55,7 @@ function removeEditorTagPair(pair) {
 
 function computeEditor() {
     editorContent = editor.getValue() || null;
+    lastActiveRange = null;
 
     needsSaving = textFileContent !== editorContent;
     textFilePathNeedsSaving.toggleAttribute("hidden", !needsSaving);
@@ -63,6 +64,7 @@ function computeEditor() {
         editorBody = null;
         editorMetadata = null;
         editorTagPairs = new Map();
+        refreshActiveMark();
         return;
     }
 
@@ -71,6 +73,7 @@ function computeEditor() {
     editorMetadata = metadata;
     editorBody = metadata ? editorContent.slice(metadata.rawLength) : editorContent;
     editorTagPairs = getTagPairs(editorBody);
+    refreshActiveMark();
 }
 
 const editor = CodeMirror(editorWrapper, editorOptions);

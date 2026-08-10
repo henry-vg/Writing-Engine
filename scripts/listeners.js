@@ -7,6 +7,7 @@ document.addEventListener("click", () => handleDocumentClick());
 document.addEventListener("keydown", (e) => handleDocumentKeyDown(e));
 
 editor.on("change", (instance, change) => handleEditorChange(change));
+editor.on("cursorActivity", () => handleEditorCursorActivity());
 editor.getWrapperElement().addEventListener("contextmenu", (e) => handleEditorContextMenu(e));
 
 for (const { button, tagValue } of buildTagButtons()) {

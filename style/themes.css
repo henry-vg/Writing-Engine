@@ -19,6 +19,14 @@
 
     --preview-line-foreground-color: rgba(135, 135, 135, 1);
 
+
+    --tag-color: 130 0 0;
+    --tag-bracket-color: 5 50 250;
+    --metadata-dashes-color: 5 50 250;
+    --metadata-key-color: 5 80 165;
+    --metadata-value-color: 165 20 20;
+    --metadata-colon-color: 15 15 15;
+    --comment-color: 0 130 0;
     --selection-foreground-color: rgba(0, 0, 0, 1);
     --selection-background-color: rgba(180, 180, 180, 1);
 
@@ -49,6 +57,14 @@
 
     --preview-line-foreground-color: rgba(186, 186, 186, 1);
 
+
+    --tag-color: 215 185 125;
+    --tag-bracket-color: 250 210 5;
+    --metadata-dashes-color: 250 210 5;
+    --metadata-key-color: 155 220 255;
+    --metadata-value-color: 205 145 120;
+    --metadata-colon-color: 180 180 180;
+    --comment-color: 105 155 85;
     --selection-background-color: rgba(180, 180, 180, 1);
     --selection-foreground-color: rgba(10, 10, 10, 1);
 
