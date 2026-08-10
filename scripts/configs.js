@@ -29,6 +29,8 @@ const activeMarkClass = "cm-active";
 const editorShortcuts = {
     "Shift-Ctrl-Down": "duplicateLine",
     "Shift-Ctrl-K": "deleteLine",
+    "Ctrl-Alt-Down": "addCursorBelow",
+    "Ctrl-Alt-Up": "addCursorAbove",
 };
 
 const disabledEditorShortcuts = ["Ctrl-D"];

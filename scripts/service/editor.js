@@ -76,6 +76,32 @@ function computeEditor() {
     refreshActiveMark();
 }
 
+function configureEditorMouse(instance, repeat, event) {
+    if (event.altKey && !event.shiftKey) return { addNew: true };
+
+    return {};
+}
+
+function addCursor(instance, direction) {
+    const ranges = instance.listSelections();
+    const heads = ranges.map((range) => range.head);
+
+    const edge = direction > 0
+        ? heads.reduce((furthest, head) => (head.line > furthest.line ? head : furthest))
+        : heads.reduce((furthest, head) => (head.line < furthest.line ? head : furthest));
+
+    const line = edge.line + direction;
+
+    if (line < instance.firstLine() || line > instance.lastLine()) return;
+
+    const position = { line, ch: Math.min(edge.ch, instance.getLine(line).length) };
+
+    instance.setSelections([...ranges, { anchor: position, head: position }], ranges.length);
+}
+
+CodeMirror.commands.addCursorBelow = (instance) => addCursor(instance, 1);
+CodeMirror.commands.addCursorAbove = (instance) => addCursor(instance, -1);
+
 CodeMirror.commands.duplicateLine = (instance) => {
     const lines = [...new Set(instance.listSelections().map((range) => range.head.line))];
 
@@ -112,4 +138,8 @@ function getEditorExtraKeys() {
     return extraKeys;
 }
 
-const editor = CodeMirror(editorWrapper, { ...editorOptions, extraKeys: getEditorExtraKeys() });
+const editor = CodeMirror(editorWrapper, {
+    ...editorOptions,
+    extraKeys: getEditorExtraKeys(),
+    configureMouse: configureEditorMouse,
+});
