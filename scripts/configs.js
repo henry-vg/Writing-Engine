@@ -26,6 +26,8 @@ const previewDebounceDelay = 250;
 const editorModeName = "writing-engine";
 const activeMarkClass = "cm-active";
 
+const disabledEditorShortcuts = ["Ctrl-D"];
+
 const editorOptions = {
     mode: editorModeName,
     theme: "none",

@@ -76,4 +76,23 @@ function computeEditor() {
     refreshActiveMark();
 }
 
-const editor = CodeMirror(editorWrapper, editorOptions);
+function getAppShortcutKeys() {
+    const buttonConfigs = [...Object.values(tags).map((tagConfig) => tagConfig.button), ...optionsMenuItems];
+
+    return buttonConfigs
+        .filter((buttonConfig) => buttonConfig?.shortcut)
+        .map((buttonConfig) => (buttonConfig.shift ? "Shift-Ctrl-" : "Ctrl-")
+            + buttonConfig.shortcut.toUpperCase());
+}
+
+function getEditorExtraKeys() {
+    const extraKeys = {};
+
+    for (const key of [...disabledEditorShortcuts, ...getAppShortcutKeys()]) {
+        extraKeys[key] = false;
+    }
+
+    return extraKeys;
+}
+
+const editor = CodeMirror(editorWrapper, { ...editorOptions, extraKeys: getEditorExtraKeys() });
