@@ -40,3 +40,22 @@
 .CodeMirror-focused .CodeMirror-selected {
     background: var(--selection-background-color);
 }
+
+.CodeMirror-dialog {
+    padding: var(--spacing-small) var(--spacing);
+    background: var(--dropdown-background-color);
+    color: var(--dropdown-button-foreground-color);
+    border-bottom: 1px solid var(--dropdown-line-foreground-color);
+    font-family: var(--font-family);
+    font-size: 12px;
+}
+
+.CodeMirror-dialog input {
+    color: var(--dropdown-button-foreground-color);
+    font-family: var(--editor-font-family);
+    font-size: var(--editor-font-size);
+}
+
+.CodeMirror-search-hint {
+    color: var(--dropdown-button-disabled-foreground-color);
+}

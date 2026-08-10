@@ -37,6 +37,9 @@ const editorShortcuts = {
     "Ctrl-Alt-Up": "addCursorAbove",
     "Ctrl-Alt-Down": "addCursorBelow",
     "Ctrl-F2": "selectAllOccurrences",
+    "Ctrl-F": "findPersistent",
+    "Ctrl-G": "findPersistentNext",
+    "Shift-Ctrl-G": "findPersistentPrev",
 };
 
 const disabledEditorShortcuts = ["Ctrl-D"];
