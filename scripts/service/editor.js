@@ -76,6 +76,23 @@ function computeEditor() {
     refreshActiveMark();
 }
 
+CodeMirror.commands.duplicateLine = (instance) => {
+    const lines = [...new Set(instance.listSelections().map((range) => range.head.line))];
+
+    instance.operation(() => {
+        for (const line of lines.sort((a, b) => b - a)) {
+            const text = instance.getLine(line);
+
+            instance.replaceRange(`\n${text}`, { line, ch: text.length });
+        }
+
+        instance.setSelections(instance.listSelections().map((range) => ({
+            anchor: { line: range.anchor.line + 1, ch: range.anchor.ch },
+            head: { line: range.head.line + 1, ch: range.head.ch },
+        })));
+    });
+};
+
 function getAppShortcutKeys() {
     const buttonConfigs = [...Object.values(tags).map((tagConfig) => tagConfig.button), ...optionsMenuItems];
 
@@ -86,7 +103,7 @@ function getAppShortcutKeys() {
 }
 
 function getEditorExtraKeys() {
-    const extraKeys = {};
+    const extraKeys = { ...editorShortcuts };
 
     for (const key of [...disabledEditorShortcuts, ...getAppShortcutKeys()]) {
         extraKeys[key] = false;

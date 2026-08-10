@@ -26,6 +26,11 @@ const previewDebounceDelay = 250;
 const editorModeName = "writing-engine";
 const activeMarkClass = "cm-active";
 
+const editorShortcuts = {
+    "Shift-Ctrl-Down": "duplicateLine",
+    "Shift-Ctrl-K": "deleteLine",
+};
+
 const disabledEditorShortcuts = ["Ctrl-D"];
 
 const editorOptions = {
