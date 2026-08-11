@@ -24,6 +24,7 @@ const tagSyntax = {
     escape: "\\"
 };
 const previewDebounceDelay = 250;
+const searchDebounceDelay = 150;
 
 const editorModeName = "writing-engine";
 const activeMarkClass = "cm-active";
@@ -37,9 +38,10 @@ const editorShortcuts = {
     "Ctrl-Alt-Up": "addCursorAbove",
     "Ctrl-Alt-Down": "addCursorBelow",
     "Ctrl-F2": "selectAllOccurrences",
-    "Ctrl-F": "findPersistent",
-    "Ctrl-G": "findPersistentNext",
-    "Shift-Ctrl-G": "findPersistentPrev",
+    "Ctrl-F": "openSearch",
+    "Ctrl-H": "openSearchAndReplace",
+    "Ctrl-G": "findNextMatch",
+    "Shift-Ctrl-G": "findPreviousMatch",
 };
 
 const disabledEditorShortcuts = ["Ctrl-D"];
@@ -217,6 +219,70 @@ const tags = {
         }
     }
 };
+
+const searchMatchStyle = "searching";
+const noMatchesMessage = "No results";
+const matchCountMessage = "$index$ of $total$";
+const matchIndexPlaceholder = "$index$";
+const matchTotalPlaceholder = "$total$";
+
+const searchPanelButtons = [
+    {
+        id: "search-expand-button",
+        tooltip: "Toggle Replace",
+        icon: "M10 17V7l5 5z",
+    },
+    {
+        id: "search-match-case-button",
+        tooltip: "Match Case",
+        icon: "M20.06 18c-.06-.01-.12-.05-.18-.11s-.09-.15-.09-.26V13.1c0-.61-.05-1.13-.15-1.58-.11-.44-.28-.81-.51-1.11a2.1 2.1 0 0 0-.9-.66c-.37-.15-.81-.22-1.32-.22s-.96.07-1.36.21c-.4.14-.73.32-1 .53s-.47.45-.6.71c-.14.26-.2.5-.2.73 0 .28.08.5.23.65.15.16.35.24.6.24.14 0 .27-.03.39-.08a.9.9 0 0 0 .3-.22.9.9 0 0 0 .19-.32c.05-.12.07-.25.07-.39 0-.14-.02-.26-.06-.36a.9.9 0 0 0-.16-.28.7.7 0 0 0-.24-.19.7.7 0 0 0-.29-.06h-.06c.06-.14.16-.27.29-.39.13-.12.29-.22.47-.31s.38-.15.6-.2c.22-.05.44-.07.67-.07.33 0 .61.05.85.15s.43.25.58.44c.15.19.26.43.33.71.07.28.11.6.11.96v.63l-2.13.3c-.5.07-.94.19-1.31.34-.37.15-.68.34-.93.57-.25.23-.43.49-.55.79-.12.3-.18.63-.18 1 0 .34.06.65.18.92.12.27.28.5.49.69.21.19.46.33.75.43.29.1.61.15.95.15.5 0 .93-.09 1.29-.27.36-.18.65-.42.87-.72h.03c.01.19.05.36.11.51.06.15.14.27.24.37.1.1.22.17.35.22.13.05.28.07.44.07.2 0 .38-.03.53-.08.15-.05.28-.13.4-.24l-.28-.63M17.5 14.9c0 .26-.05.5-.14.72-.09.22-.22.42-.38.58-.16.16-.36.29-.58.38-.22.09-.47.14-.73.14-.24 0-.46-.04-.65-.11-.19-.07-.35-.17-.48-.29-.13-.12-.23-.27-.3-.44-.07-.17-.1-.35-.1-.54 0-.24.04-.46.11-.65.07-.19.19-.36.36-.5.17-.14.39-.26.66-.36.27-.1.6-.18.99-.24l1.24-.18v1.49M8.75 7h-1.5L3 18h1.9l1.1-3h4l1.1 3H13L8.75 7m-2.2 6.5L8 9.5l1.45 4h-2.9Z",
+    },
+    {
+        id: "search-whole-word-button",
+        tooltip: "Match Whole Word",
+        icon: "M3 15h18v2H3zm0-4h13v2H3zm0-4h18v2H3zm16 4h2v2h-2z",
+    },
+    {
+        id: "search-regex-button",
+        tooltip: "Use Regular Expression",
+        icon: "M16 16.92c-.33.05-.66.08-1 .08s-.67-.03-1-.08v-3.16l-2.25 2.24c-.55-.39-1.03-.87-1.42-1.42L13.57 12H10.4c-.05-.33-.08-.66-.08-1s.03-.67.08-1h3.17l-2.24-2.24c.27-.28.57-.54.88-.76.18-.13.36-.25.55-.36L15 8.86V5.7c.33-.05.66-.08 1-.08s.67.03 1 .08v3.16l2.24-2.24c.55.39 1.04.87 1.43 1.42L18.43 10.3h3.16c.05.33.08.66.08 1s-.03.67-.08 1h-3.17l2.24 2.24c-.39.55-.87 1.03-1.42 1.42L17 13.72v3.2M5 19a2 2 0 1 1 4 0 2 2 0 0 1-4 0Z",
+    },
+    {
+        id: "search-in-selection-button",
+        tooltip: "Find In Selection",
+        icon: "M3 5h2V3c-1.1 0-2 .9-2 2m0 8h2v-2H3zm4 8h2v-2H7zM3 9h2V7H3zm10-6h-2v2h2zm6 0v2h2c0-1.1-.9-2-2-2M5 21v-2H3c0 1.1.9 2 2 2m-2-4h2v-2H3zM9 3H7v2h2zm2 18h2v-2h-2zm8-8h2v-2h-2zm0 8c1.1 0 2-.9 2-2h-2zm0-12h2V7h-2zm0 8h2v-2h-2zm-4 4h2v-2h-2zm0-16h2V3h-2zM7 17h10V7H7zm2-8h6v6H9z",
+    },
+    {
+        id: "search-previous-button",
+        tooltip: "Previous Match",
+        icon: "m7.41 15.41 4.59-4.58 4.59 4.58L18 14l-6-6-6 6z",
+    },
+    {
+        id: "search-next-button",
+        tooltip: "Next Match",
+        icon: "M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6z",
+    },
+    {
+        id: "search-close-button",
+        tooltip: "Close",
+        icon: "M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z",
+    },
+    {
+        id: "search-preserve-case-button",
+        tooltip: "Preserve Case",
+        icon: "M9.75 7h-1.5L4 18h1.9l1.1-3h4l1.1 3H14L9.75 7m-2.2 6.5L9 9.5l1.45 4h-2.9M20 12v6a2 2 0 0 1-2 2h-2v-2h2v-6h-2v-2h2a2 2 0 0 1 2 2Z",
+    },
+    {
+        id: "search-replace-button",
+        tooltip: "Replace",
+        icon: "M11 6c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2h-6c-1.1 0-2-.9-2-2zm2 0v6h6V6zM3 13v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2m2 0h6v6H5zM7 3v2H5c-1.1 0-2 .9-2 2v2h2V7h2v2l3-3-3-3",
+    },
+    {
+        id: "search-replace-all-button",
+        tooltip: "Replace All",
+        icon: "M11 6c0-1.1.9-2 2-2h6c1.1 0 2 .9 2 2v6c0 1.1-.9 2-2 2h-6c-1.1 0-2-.9-2-2zm2 0v6h6V6zM3 13v6c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2v-6c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2m2 0h6v6H5zm2-10v2H5c-1.1 0-2 .9-2 2v2h2V7h2v2l3-3-3-3m10 12v2h2c1.1 0 2-.9 2-2v-2h-2v2h-2v-2l-3 3 3 3",
+    },
+];
 
 const menuElements = [
     { button: fontButton, dropdown: fontDropdown },

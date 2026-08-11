@@ -23,6 +23,7 @@ function handleDocumentClick() {
 function handleDocumentKeyDown(e) {
     if (e.key === "Escape") {
         closeAllMenus();
+        closeSearchPanel();
 
         if (!dialogWrapper.hidden) {
             closeDialog("cancel");
@@ -54,6 +55,34 @@ function handleDocumentKeyDown(e) {
 
     e.preventDefault();
     handleFormattingButtonClick(tagConfig.values[0]);
+}
+
+function handleSearchFieldInput() {
+    findMatchesSoon();
+}
+
+function handleSearchFieldKeyDown(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        goToMatch(e.shiftKey ? -1 : 1);
+        return;
+    }
+
+    if (e.key === "Escape") closeSearchPanel();
+}
+
+function handleReplaceFieldKeyDown(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        replaceCurrentMatch();
+        return;
+    }
+
+    if (e.key === "Escape") closeSearchPanel();
+}
+
+function handleSearchExpandButtonClick() {
+    setSearchReplaceVisible(searchReplaceRow.hidden);
 }
 
 function handleEditorCursorActivity() {

@@ -9,16 +9,16 @@ function closeAllMenus() {
     editorContextMenu.toggleAttribute("hidden", true);
 }
 
-function buildMenuItems() {
-    for (const item of optionsMenuItems) {
-        const button = document.getElementById(item.id);
+function applyButtonConfigs(buttonConfigs) {
+    for (const buttonConfig of buttonConfigs) {
+        const button = document.getElementById(buttonConfig.id);
 
         if (!button) {
-            showError(`there is no menu item with the id "${item.id}"`);
+            showError(`there is no button with the id "${buttonConfig.id}"`);
             continue;
         }
 
-        applyButtonConfig(button, item);
+        applyButtonConfig(button, buttonConfig);
     }
 }
 

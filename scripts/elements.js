@@ -26,6 +26,23 @@ const toggleSpellcheckButton = document.getElementById("toggle-spellcheck-button
 const togglePreviewButton = document.getElementById("toggle-preview-button");
 const togglePreviewNegativeButton = document.getElementById("toggle-preview-negative-button");
 
+const searchPanel = document.getElementById("searchPanel");
+const searchField = document.getElementById("searchField");
+const searchReplaceField = document.getElementById("searchReplaceField");
+const searchReplaceRow = document.getElementById("searchReplaceRow");
+const searchCount = document.getElementById("searchCount");
+const searchExpandButton = document.getElementById("search-expand-button");
+const searchMatchCaseButton = document.getElementById("search-match-case-button");
+const searchWholeWordButton = document.getElementById("search-whole-word-button");
+const searchRegexButton = document.getElementById("search-regex-button");
+const searchInSelectionButton = document.getElementById("search-in-selection-button");
+const searchPreviousButton = document.getElementById("search-previous-button");
+const searchNextButton = document.getElementById("search-next-button");
+const searchCloseButton = document.getElementById("search-close-button");
+const searchPreserveCaseButton = document.getElementById("search-preserve-case-button");
+const searchReplaceButton = document.getElementById("search-replace-button");
+const searchReplaceAllButton = document.getElementById("search-replace-all-button");
+
 const editorContextMenu = document.getElementById("editorContextMenu");
 const contextMenuTagButtons = document.getElementById("contextMenuTagButtons");
 

@@ -8,6 +8,23 @@ document.addEventListener("keydown", (e) => handleDocumentKeyDown(e));
 
 editor.on("change", (instance, change) => handleEditorChange(change));
 editor.on("cursorActivity", () => handleEditorCursorActivity());
+
+searchField.addEventListener("input", () => handleSearchFieldInput());
+searchField.addEventListener("keydown", (e) => handleSearchFieldKeyDown(e));
+searchReplaceField.addEventListener("keydown", (e) => handleReplaceFieldKeyDown(e));
+
+searchExpandButton.addEventListener("click", () => handleSearchExpandButtonClick());
+searchMatchCaseButton.addEventListener("click", () => toggleSearchOption("matchCase", searchMatchCaseButton));
+searchWholeWordButton.addEventListener("click", () => toggleSearchOption("wholeWord", searchWholeWordButton));
+searchRegexButton.addEventListener("click", () => toggleSearchOption("regex", searchRegexButton));
+searchInSelectionButton.addEventListener("click", () => toggleSearchOption("inSelection", searchInSelectionButton));
+searchPreserveCaseButton.addEventListener("click", () => toggleSearchOption("preserveCase", searchPreserveCaseButton));
+
+searchPreviousButton.addEventListener("click", () => goToMatch(-1));
+searchNextButton.addEventListener("click", () => goToMatch(1));
+searchCloseButton.addEventListener("click", () => closeSearchPanel());
+searchReplaceButton.addEventListener("click", () => replaceCurrentMatch());
+searchReplaceAllButton.addEventListener("click", () => replaceAllMatches());
 editor.getWrapperElement().addEventListener("contextmenu", (e) => handleEditorContextMenu(e));
 
 for (const { button, tagValue } of buildTagButtons()) {

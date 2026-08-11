@@ -9,7 +9,20 @@ let dialogResolve = null;
 let editorTagPairs = new Map();
 let lastActiveRange = null;
 let activeMark = null;
+let searchState = {
+    matchCase: false,
+    wholeWord: false,
+    regex: false,
+    inSelection: false,
+    preserveCase: false,
+    range: null,
+    matches: [],
+    marks: [],
+    overlay: null,
+    annotation: null,
+};
 let previewVisible = defaultPreviewVisible;
+let searchTimeout = null;
 let previewTimeout = null;
 let previewScroll = { x: 0, y: 0 };
 
@@ -29,7 +42,8 @@ let previewScroll = { x: 0, y: 0 };
     loadFont(await dbGet(dbFontKey) ?? defaultFont);
 })();
 
-buildMenuItems();
+applyButtonConfigs(optionsMenuItems);
+applyButtonConfigs(searchPanelButtons);
 
 editor.focus();
 preview.toggleAttribute("hidden", true);
